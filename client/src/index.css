@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+:root {
+  /* Brand Colors */
+  --color-primary: #842A3B;
+  --color-primary-hover: #662222;
+
+  --color-secondary: #A3485A;
+  --color-secondary-hover: #842A3B;
+
+  --color-accent: #F5DAA7;
+
+  /* Text Colors */
+  --text-primary: #1a1a1a;
+  --text-secondary: #ffffff;
+
+  /* Backgrounds */
+  --bg-light: #ffffff;
+  --bg-accent: #F5DAA7;
+}
+
+/* Poore browser se scrollbar hatane ke liye */
+@layer base {
+  html, body {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+  }
+
+  ::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
+}
+
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes float {
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(2deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
+}
+
+@keyframes floatTilted {
+  0% { transform: translate(0, 0) rotate(-12deg); }
+  50% { transform: translate(-5px, -10px) rotate(-10deg); }
+  100% { transform: translate(0, 0) rotate(-12deg); }
+}
+@keyframes floatTiltedO {
+  0% { transform: translate(0, 0) rotate(10deg); }
+  50% { transform: translate(5px, 10px) rotate(10deg); }
+  100% { transform: translate(0, 0) rotate(12deg); }
+}
+
+.animate-slide-up { 
+  animation: slideUp 0.8s ease-out forwards; 
+  opacity: 0; 
+}
+
+.feature-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 20px 40px rgba(132, 42, 59, 0.1);
+}
+
+video {
+  object-fit: cover;
+}
+
+.animate-fade-in { animation: fadeIn 1s ease-out forwards; }
+.animate-slide-up { animation: slideUp 0.8s ease-out forwards; opacity: 0; }
+.animate-float { animation: float 6s ease-in-out infinite; }
+.animate-float-tilted { animation: floatTilted 8s ease-in-out infinite; }
+.animate-float-tiltedO { animation: floatTiltedO 8s ease-in-out infinite; }

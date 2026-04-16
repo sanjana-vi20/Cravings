@@ -17,6 +17,7 @@ import RestaurantDetails from "./pages/RestaurantDetails";
 import ExploreMenu from "./components/restaurantDashboard/ExploreMenu";
 import CartPage from "./pages/CartPage";
 import CheckoutPage from "./pages/CheckoutPage";
+import EditItemModal from "./components/restaurantDashboard/resturantModals/EditItemModal";
 
 const App = () => {
   return (
@@ -35,6 +36,7 @@ const App = () => {
           <Route path="/ride-dashboard" element={<RideDashboard />} />
           <Route path="/restaurant-dashboard" element={<RestaurantDashboard />} />
           <Route path="/explore-menu" element={<ExploreMenu />} />
+          <Route path="/edit-menu" element={<EditItemModal />} />
           <Route path="/restaurant-details/:id" element={<RestaurantDetails />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/add-to-cart" element={<CartPage/>} />

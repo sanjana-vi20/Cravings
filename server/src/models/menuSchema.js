@@ -11,6 +11,11 @@ const menuSchema = mongoose.Schema(
       type: String,
       required: true,
     },
+    gst: {
+        type: String,
+        required: true,
+        default: "N/A",
+      },
     cuisine: {
       type: String,
       required: true,

@@ -14,6 +14,7 @@ const EditItemModal = ({ onClose  , selectedItem}) => {
     cuisine: selectedItem?.cuisine || "",
     type: selectedItem?.type || "",
     preparationTime: selectedItem?.preparationTime || "",
+    gst : selectedItem?.gst || "",
     servingsize: selectedItem?.servingsize || "",
     availability: selectedItem?.availability || "",
    })
@@ -48,6 +49,7 @@ const EditItemModal = ({ onClose  , selectedItem}) => {
       form_data.append("type", formData.type);
       form_data.append("description", formData.description);
       form_data.append("price", formData.price);
+      form_data.append("gst" , formData.gst);
       form_data.append("servingsize", formData.servingsize);
       form_data.append("preparationTime", formData.preparationTime);
 
@@ -212,10 +214,16 @@ const EditItemModal = ({ onClose  , selectedItem}) => {
               <textarea rows="4" className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none italic text-gray-600 text-sm"name='description' value={formData.description} onChange={handleOnchange}></textarea>
             </div>
 
-           <div className='flex gap-6 items-center'>
-             <div className='flex flex-col'>
+           <div className='flex flex-col gap-6 '>
+            <div className='flex '>
+               <div className='flex flex-col'>
              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Serving Size</label>
              <input type="text" className="px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none" placeholder="15-20 Mins" name='servingsize' value={formData.servingsize} onChange={handleOnchange} />
+            </div>
+             <div className='flex flex-col'>
+             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">GSt in (%) </label>
+             <input type="text" className="px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none" placeholder="" name='gst' value={formData.gst} onChange={handleOnchange} />
+            </div>
             </div>
             <div>
               <input type="checkbox" name='availability' checked={formData.availability} value={formData.availability} onChange={handleOnchange}/> Availability

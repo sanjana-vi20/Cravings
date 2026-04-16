@@ -10,6 +10,7 @@ import AuthRouter from "./src/routers/authRouter.js";
 import PublicRouter from "./src/routers/publicRouter.js";
 import UserRouter from "./src/routers/userRouter.js";
 import ManagerRouter from "./src/routers/managerRouter.js";
+import RiderRouter from "./src/routers/riderRouter.js";
 
 import morgan from 'morgan';
 
@@ -23,6 +24,7 @@ app.use(morgan("dev"));
 app.use("/auth", AuthRouter);
 app.use("/public" , PublicRouter);
 app.use("/user" , UserRouter);
+app.use("/rider" , RiderRouter);
 app.use("/restaurant" , ManagerRouter);
 
 app.get("/", (req, res) => {

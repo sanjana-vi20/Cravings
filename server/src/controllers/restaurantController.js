@@ -169,6 +169,7 @@ export const AddRestaurantMenuItem = async (req, res, next) => {
       availability,
       price,
       preparationTime,
+      gst,
       servingsize,
     } = req.body;
 
@@ -182,6 +183,7 @@ export const AddRestaurantMenuItem = async (req, res, next) => {
       !preparationTime ||
       !availability ||
       !servingsize ||
+      !gst||
       !cuisine
     ) {
       const error = new Error("All Fields are Required");
@@ -242,6 +244,7 @@ export const RestaurantEditMenuItem = async (req, res, next) => {
       type,
       preparationTime,
       availability,
+      gst,
       servingsize,
       
     } = req.body;
@@ -256,6 +259,7 @@ export const RestaurantEditMenuItem = async (req, res, next) => {
       !type ||
       !preparationTime ||
       !availability ||
+      !gst||
       !servingsize 
       
     ) {
@@ -280,6 +284,7 @@ export const RestaurantEditMenuItem = async (req, res, next) => {
       preparationTime || existingMenuItem.preparationTime;
     existingMenuItem.availability =
       availability || existingMenuItem.availability;
+      existingMenuItem.gst = gst || existingMenuItem.gst;
     existingMenuItem.servingsize = servingsize || existingMenuItem.servingsize;
     // existingMenuItem.cuisine = cuisine || existingMenuItem.cuisine;
     existingMenuItem.image =

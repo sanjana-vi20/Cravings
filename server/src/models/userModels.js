@@ -128,6 +128,11 @@ const userSchema = mongoose.Schema(
       required: true,
       default: "N/A",
     },
+    deliveryFee: {
+      type : Number,
+      required : true,
+      default : 40,
+    },
     documents: {
       gst: {
         type: String,

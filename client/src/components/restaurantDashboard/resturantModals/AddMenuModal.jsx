@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import {
   X, Plus, Trash2, Utensils, IndianRupee, Camera, Users,
-  Leaf, Drumstick, Globe, Sparkles, Clock, FileText, CheckCircle2
+  Leaf, Drumstick, Globe, Sparkles, Clock, FileText, CheckCircle2,
+  Percent // Naya Icon add kiya
 } from "lucide-react";
 import toast from "react-hot-toast";
 import api from "../../../config/Api";
@@ -12,6 +13,7 @@ const AddMenuModal = ({ onClose }) => {
     cuisine: "",
     description: "",
     price: "",
+    gst: "5", // Default 5% set kiya hai
     servingsize: "",
     availability: true,
     preparationTime: "",
@@ -128,17 +130,30 @@ const AddMenuModal = ({ onClose }) => {
                 />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700 flex items-center gap-2"><IndianRupee size={16}/> Price (INR)</label>
-                <input 
-                  name="price"
-                  type="number"
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-[#842A3B] focus:ring-1 focus:ring-[#842A3B] outline-none transition-all"
-                  placeholder="0.00"
-                  value={formData.price}
-                  onChange={handleOnchange}
-                  required
-                />
+              {/* Grid for Price and GST side by side */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700 flex items-center gap-2"><IndianRupee size={16}/> Price</label>
+                  <input 
+                    name="price"
+                    type="number"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-[#842A3B] focus:ring-1 focus:ring-[#842A3B] outline-none transition-all"
+                    placeholder="0.00"
+                    value={formData.price}
+                    onChange={handleOnchange}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700 flex items-center gap-2"><Percent size={16}/> GST (%)</label>
+                  <input 
+                    name="gst"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-[#842A3B] focus:ring-1 focus:ring-[#842A3B] outline-none transition-all bg-white"
+                    value={formData.gst}
+                    onChange={handleOnchange}
+                    required
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">

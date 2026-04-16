@@ -53,7 +53,7 @@ const CartPage = () => {
         quantity: qtyMap[item._id] || 0,
       }));
 
-      // console.log("finalCart : ", finalCart);
+      console.log("finalCart : ", allData);
 
       setCartItems(finalCart);
       setLoading(false);
@@ -127,22 +127,41 @@ const CartPage = () => {
   // console.log("grouped : ", groupedItems);
 
   // 4. Calculations
-  const calculateRestBill = (items) => {
-    const itemTotal = items.reduce(
-      (sum, i) => sum + Number(i.price) * i.quantity,
-      0,
-    );
-    const delivery = itemTotal > 500 ? 0 : 40;
-    const gst = Math.round(itemTotal * 0.05);
-    const platform = 5;
-    return {
-      itemTotal,
-      delivery,
-      gst,
-      platform,
-      grandTotal: itemTotal + delivery + gst + platform,
-    };
+ const calculateRestBill = (items) => {
+  // 1. Har item ka total price aur uska specific GST calculate karna
+  const totals = items.reduce(
+    (acc, i) => {
+      const price = Number(i.price);
+      const quantity = i.quantity;
+      const subtotal = price * quantity;
+
+      // "10%" jaise string se number nikalna (10)
+      const gstPercentage = parseFloat(i.gst) || 0; 
+      const itemGst = (subtotal * gstPercentage) / 100;
+
+      acc.itemTotal += subtotal;
+      acc.totalGst += itemGst;
+      
+      return acc;
+    },
+    { itemTotal: 0, totalGst: 0 }
+  );
+
+  // 2. Delivery aur baaki charges
+  const delivery = totals.itemTotal > 500 ? 0 : 40;
+  const platform = 5;
+  
+  // Math.round taaki decimal values clean rahein
+  const finalGst = Math.round(totals.totalGst);
+
+  return {
+    itemTotal: totals.itemTotal,
+    delivery,
+    gst: finalGst,
+    platform,
+    grandTotal: totals.itemTotal + delivery + finalGst + platform,
   };
+};
 
   const handleCheckout = (resName, items, bill) => {
     if (isLogin) {

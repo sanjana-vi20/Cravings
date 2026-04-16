@@ -6,7 +6,6 @@ import ResturantOverview from '../../components/restaurantDashboard/ResturantOve
 import RestaurantProfile from '../../components/restaurantDashboard/RestaurantProfile';
 import RestaurantOrder from '../../components/restaurantDashboard/RestaurantOrder';
 import UserTransaction from '../../components/userDashboard/UserTransaction';
-import UserHelp from '../../components/userDashboard/UserHelp';
 import RestaurantMenu from '../../components/restaurantDashboard/RestaurantMenu';
 import RestaurantTransaction from '../../components/restaurantDashboard/RestaurantTransaction';
 import RestaurantFeedback from '../../components/restaurantDashboard/RestaurantFeedback';

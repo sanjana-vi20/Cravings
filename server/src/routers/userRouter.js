@@ -1,5 +1,5 @@
 import express from 'express';
-import { UserPhotoUpdate, UserResetPassword, UserUpdate } from '../controllers/userController.js';
+import { UserPhotoUpdate, UserPlaceOrder, UserResetPassword, UserUpdate } from '../controllers/userController.js';
 import { Protect } from '../middleware/userMiddleware.js';
 import multer from 'multer';
 
@@ -9,6 +9,8 @@ const upload = multer();
 router.put("/update" ,Protect, UserUpdate);
 router.patch("/photo-update" ,Protect, upload.single("image"), UserPhotoUpdate );
 router.patch("/resetPassword" ,Protect, UserResetPassword);
+router.post("/placeorder", Protect, UserPlaceOrder);
+
 
 
 export default router;

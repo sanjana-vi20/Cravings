@@ -1,5 +1,6 @@
 import cloudinary from "../config/cloudinary.js";
-import bcrypt from 'bcrypt'
+import bcrypt from "bcrypt";
+import Order from "../models/orderModel.js";
 
 export const UserUpdate = async (req, res, next) => {
   try {
@@ -120,6 +121,53 @@ export const UserResetPassword = async (req, res, next) => {
     await currentUser.save();
 
     res.status(200).json({ message: "Password Reset Successful" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const UserPlaceOrder = async (req, res, next) => {
+  try {
+    const currentUser = req.user;
+
+    const { restaurantId, items, orderValue, status, review } = req.body;
+
+    console.log({ restaurantId, items, orderValue, status, review });
+
+    if (!restaurantId || !items || !orderValue || !status) {
+      const error = new Error("All feilds required");
+      error.statusCode = 400;
+      return next(error);
+    }
+
+    const order = await Order.create({
+      orderNumber: `ORD-${Date.now()}`,
+      restaurantId,
+      userId: currentUser._id,
+      items,
+      orderValue,
+      status,
+      review: review || "N/A",
+    });
+
+    const populatedOrder = await Order.findById(order._id)
+      .populate("restaurantId")
+      .populate("userId");
+
+    const io = req.app.get("socketio");
+    if (io) {
+      // Hum us restaurant ke "room" mein message bhej rahe hain
+      console.log("emmititng");
+      
+      io.to(restaurantId.toString()).emit("new_order_received", populatedOrder);
+    }
+
+    console.log("emmittedddd");
+    
+
+    res
+      .status(201)
+      .json({ message: "Order Placed Successfully", data: populatedOrder });
   } catch (error) {
     next(error);
   }

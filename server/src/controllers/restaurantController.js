@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import { UploadMultipleToCloudinary } from "../utils/imageUploader.js";
 import Menu from "../models/menuSchema.js";
 import User from "../models/userModels.js";
+import Order from "../models/orderModel.js";
 
 export const ResUserUpdate = async (req, res, next) => {
   try {
@@ -17,12 +18,12 @@ export const ResUserUpdate = async (req, res, next) => {
       city,
       address,
       pin,
-      upi,  
+      upi,
       ifs_Code,
       account_number,
       opening,
       closing,
-      lat, 
+      lat,
       lon,
     } = req.body;
     const currentUser = req.user;
@@ -41,22 +42,26 @@ export const ResUserUpdate = async (req, res, next) => {
     currentUser.mobnumber = mobnumber || currentUser.mobnumber;
     currentUser.dob = dob || currentUser.dob;
     currentUser.gender = gender || currentUser.gender;
-    currentUser.city = city|| currentUser.city;
+    currentUser.city = city || currentUser.city;
     currentUser.address = address || currentUser.address;
     currentUser.pin = pin || currentUser.pin;
     currentUser.geoLocation.lat = lat || currentUser.geoLocation.lat;
     currentUser.geoLocation.lon = lon || currentUser.geoLocation.lon;
     currentUser.paymentDetails.upi = upi || currentUser.paymentDetails.upi;
-    currentUser.paymentDetails.account_number = account_number || currentUser.paymentDetails.account_numbe;
-    currentUser.paymentDetails.ifs_Code = ifs_Code || currentUser.paymentDetails.ifs_Code;
+    currentUser.paymentDetails.account_number =
+      account_number || currentUser.paymentDetails.account_numbe;
+    currentUser.paymentDetails.ifs_Code =
+      ifs_Code || currentUser.paymentDetails.ifs_Code;
     // currentUser.documents.uidai = uidai;
     // currentUser.documents.pan = pan;
-    currentUser.restaurantTiming.opening = opening || currentUser.restaurantTiming.opening;
-    currentUser.restaurantTiming.closing = closing || currentUser.restaurantTiming.closing;
+    currentUser.restaurantTiming.opening =
+      opening || currentUser.restaurantTiming.opening;
+    currentUser.restaurantTiming.closing =
+      closing || currentUser.restaurantTiming.closing;
 
     let restaurantImages = [];
     // console.log(req.files);
-    
+
     if (req.files) {
       restaurantImages = await UploadMultipleToCloudinary(req.files);
       console.log(restaurantImages);
@@ -66,14 +71,10 @@ export const ResUserUpdate = async (req, res, next) => {
     }
 
     // const existingUser = await User.findOne({ email: currentUser.email });
-    
-    
-    
-      // if (restaurantImages.length > 0) {    
-      //   existingUser.restaurantImages = restaurantImages;
-      // } 
 
-
+    // if (restaurantImages.length > 0) {
+    //   existingUser.restaurantImages = restaurantImages;
+    // }
 
     await currentUser.save();
 
@@ -173,8 +174,8 @@ export const AddRestaurantMenuItem = async (req, res, next) => {
       servingsize,
     } = req.body;
 
-    console.log(" body",req.body);
-    
+    console.log(" body", req.body);
+
     if (
       !dishName ||
       !description ||
@@ -183,7 +184,7 @@ export const AddRestaurantMenuItem = async (req, res, next) => {
       !preparationTime ||
       !availability ||
       !servingsize ||
-      !gst||
+      !gst ||
       !cuisine
     ) {
       const error = new Error("All Fields are Required");
@@ -208,8 +209,8 @@ export const AddRestaurantMenuItem = async (req, res, next) => {
       restaurantID: CurrentUser._id,
     });
 
-    console.log( "newMenu" , newMenuItem);
-  
+    console.log("newMenu", newMenuItem);
+
     res.status(201).json({
       message: "Menu Item Added Successfully",
       data: newMenuItem,
@@ -223,7 +224,7 @@ export const GetRestaurantMenuItem = async (req, res, next) => {
   try {
     const CurrentUser = req.user;
     const menuItems = await Menu.find({ restaurantID: CurrentUser._id });
-    console.log( "menu " , menuItems);
+    console.log("menu ", menuItems);
 
     res.status(200).json({
       message: "Menu Items Fetched Successfully",
@@ -233,7 +234,6 @@ export const GetRestaurantMenuItem = async (req, res, next) => {
     next(error);
   }
 };
-
 
 export const RestaurantEditMenuItem = async (req, res, next) => {
   try {
@@ -246,11 +246,9 @@ export const RestaurantEditMenuItem = async (req, res, next) => {
       availability,
       gst,
       servingsize,
-      
     } = req.body;
 
     const { id } = req.params;
-
 
     if (
       !dishName ||
@@ -259,9 +257,8 @@ export const RestaurantEditMenuItem = async (req, res, next) => {
       !type ||
       !preparationTime ||
       !availability ||
-      !gst||
-      !servingsize 
-      
+      !gst ||
+      !servingsize
     ) {
       const error = new Error("All Fields are Required");
       error.statusCode = 400;
@@ -284,11 +281,10 @@ export const RestaurantEditMenuItem = async (req, res, next) => {
       preparationTime || existingMenuItem.preparationTime;
     existingMenuItem.availability =
       availability || existingMenuItem.availability;
-      existingMenuItem.gst = gst || existingMenuItem.gst;
+    existingMenuItem.gst = gst || existingMenuItem.gst;
     existingMenuItem.servingsize = servingsize || existingMenuItem.servingsize;
     // existingMenuItem.cuisine = cuisine || existingMenuItem.cuisine;
-    existingMenuItem.image =
-      image.length > 0 ? image : existingMenuItem.image;
+    existingMenuItem.image = image.length > 0 ? image : existingMenuItem.image;
     await existingMenuItem.save();
 
     res.status(201).json({
@@ -299,3 +295,24 @@ export const RestaurantEditMenuItem = async (req, res, next) => {
   }
 };
 
+export const GetAllPendingOrders = async (req, res, next) => {
+  try {
+    // Manager ki ID se uske restaurant ke orders dhoondo
+    // Maan lete hain ki Manager hi Restaurant ka owner hai
+    const managerId = req.user._id;
+
+    const pendingOrders = await Order.find({
+      restaurantId: managerId, // Manager ki ID hi yahan restaurantId hai
+      status: "pending", // Sirf pending wale orders
+    })
+      .populate("userId", "fullName email") // Customer ka naam chahiye
+      .sort({ createdAt: -1 }); // Naye orders sabse upar
+
+      console.log("pendingOrders" , pendingOrders);
+      
+
+    res.status(200).json({ message: "Orders fetched", data: pendingOrders });
+  } catch (error) {
+    next(error);
+  }
+};

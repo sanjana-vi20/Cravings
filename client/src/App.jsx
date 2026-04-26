@@ -18,6 +18,8 @@ import ExploreMenu from "./components/restaurantDashboard/ExploreMenu";
 import CartPage from "./pages/CartPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import EditItemModal from "./components/restaurantDashboard/resturantModals/EditItemModal";
+import PaymentSuccessPage from "./pages/PaymentSuccessPage";
+import NewRequestPage from "./components/restaurantDashboard/NewRequestPage";
 
 const App = () => {
   return (
@@ -36,10 +38,12 @@ const App = () => {
           <Route path="/ride-dashboard" element={<RideDashboard />} />
           <Route path="/restaurant-dashboard" element={<RestaurantDashboard />} />
           <Route path="/explore-menu" element={<ExploreMenu />} />
+          <Route path="/requests" element={<NewRequestPage />} />
           <Route path="/edit-menu" element={<EditItemModal />} />
           <Route path="/restaurant-details/:id" element={<RestaurantDetails />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/add-to-cart" element={<CartPage/>} />
+          <Route path="/paymentSuccess" element={<PaymentSuccessPage/>} />
           <Route path="/checkoutPage" element={<CheckoutPage/>} />
         </Routes>
         {/* <Footer/> */}

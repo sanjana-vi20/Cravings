@@ -9,13 +9,15 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
+import api from "../config/Api";
 
 const CheckoutPage = () => {
   const location = useLocation();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [isProcessing , setIsProcessing] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const { restaurantName, items, billDetails } = location.state || {};
+  const [paymentMethod, setPaymentMethod] = useState("razorPay");
 
   const [coupon, setCoupon] = useState("");
   const [discount, setDiscount] = useState(0);
@@ -30,16 +32,146 @@ const CheckoutPage = () => {
     }
   };
 
-  const handlePlaceOrder = () =>{
-    
-  }
+  // console.log("items" , items);
+  
+  
+  const GeneratePayload = (RazorpayOrderID, RazorpayPaymentID) => {
 
+   const restaurantId = items && items.length > 0 ? items[0].restaurantID.id : "";
+   console.log("restaurantId", restaurantId, );
+   
+  return {
+    restaurantId: restaurantId, 
+    userId: user._id,
+    items: items, 
+    orderValue: {
+      subtotal: billDetails.itemTotal, 
+      tax: billDetails.gst,
+      total: billDetails.grandTotal - discount, 
+      promoCode: coupon || "NONE", 
+      deliveryFee: billDetails.delivery || 0,
+      discountPercentage: discount > 0 ? 50 : 0, 
+      paymentMethod: "razorPay",
+      paymentStatus: "paid",
+      razorpayOrderID: RazorpayOrderID,
+      razorpayPaymentID: RazorpayPaymentID,
+    },
+    status: "pending",
+    review: {},
+  };
+};
+
+  const handleRazorpayPayment = async () => {
+    // console.log("BillDetails : " , billDetails);
+    const total = billDetails.grandTotal;
+
+    try {
+      const keyRes = await api.get("/payment/getRazorpayKey");
+      const key = keyRes.data.key;
+      // console.log(key);
+
+      const orderRes = await api.post("/payment/createOrder", {
+        amount: total,
+      });
+
+      const orderdata = orderRes.data.data;
+
+      console.log(orderdata);
+
+      const option = {
+        key,
+        amount: String(orderdata.amount),
+        currency: orderdata.currency,
+        name: "Cravings", //your business name
+        description: "Test Transaction",
+        image: "https://placehold.co/600x400?text=CR",
+        order_id: orderdata.id,
+
+        handler: async (response) => {
+          try {
+            console.log(response);
+
+            const VerifyPaymentPayload = {
+              paymentID: response.razorpay_payment_id,
+              orderID: response.razorpay_order_id,
+              signature: response.razorpay_signature,
+            };
+            console.log(VerifyPaymentPayload);
+            const res = await api.post(
+              "/payment/verifyPayment",
+              VerifyPaymentPayload,
+            );
+
+            const payload = GeneratePayload(
+              response.razorpay_order_id,
+              response.razorpay_payment_id,
+            );
+
+            const OrderRes = await api.post("/user/placeorder", payload);
+            console.log("Order completed");
+            
+
+            navigate("/paymentSuccess", { state: OrderRes.data.data });
+          } catch (error) {
+            console.log(error);
+            toast.error(error?.response?.data?.message || "Unknown Error");
+          } finally {
+            setIsProcessing(false);
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            toast.error("Please Complete your Payment to Proceed");
+            setIsProcessing(false);
+          },
+        },
+        prefill: {
+          name: user.fullName, //your customer's name
+          email: user.email,
+          contact: user.mobileNumber, //Provide the customer's phone number for better conversion rates
+        },
+        notes: {
+          address: "Razorpay Corporate Office",
+        },
+        theme: {
+          color: "#F16D34",
+        },
+      };
+
+      console.log(option);
+      const razorpay = new window.Razorpay(option);
+      razorpay.open();
+
+      razorpay.on("payment.failed", (response) => {
+        console.log("Payment Failed");
+        toast.error("Payment Failed");
+      });
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handlePlaceOrder = () => {
+    if (!user || !items) {
+      toast.error("Session expired. Please login again.");
+      navigate("/login");
+      return;
+    }
+    setIsProcessing(true);
+    console.log("lets start Payment");
+
+    if (paymentMethod === "razorPay") {
+      console.log("Calling RazorPay");
+      handleRazorpayPayment();
+    }
+  };
 
   if (!items) return navigate("/cart");
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20 font-sans">
-
       <div className="max-w-4xl mx-auto pt-8 px-4 grid grid-cols-1 md:grid-cols-12 gap-8">
         {/* Left Side: Address & Payment */}
         <div className="md:col-span-7 space-y-6">
@@ -160,7 +292,8 @@ const CheckoutPage = () => {
               onClick={handlePlaceOrder}
               disabled={isProcessing}
             >
-             {isProcessing ? "Processing..." : "Place Order"} <ChevronRight size={18} />
+              {isProcessing ? "Processing..." : "Place Order"}{" "}
+              <ChevronRight size={18} />
             </button>
           </div>
         </div>

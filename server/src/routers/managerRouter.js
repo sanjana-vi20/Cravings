@@ -1,6 +1,7 @@
 import express from "express";
 import {
   AddRestaurantMenuItem,
+  GetAllPendingOrders,
   GetRestaurantMenuItem,
   RestaurantEditMenuItem,
   ResUserPhotoUpdate,
@@ -42,6 +43,8 @@ router.put(
   upload.array("image", 5),
   RestaurantEditMenuItem,
 );
+
+router.get("/fetch-orders" ,Protect, GetAllPendingOrders);
 
 
 

@@ -24,7 +24,7 @@ const RestaurantOrder = () => {
       items: ["Paneer Tikka", "Butter Naan"],
       total: "₹450",
       time: "2 min ago",
-      status: "new",
+      status: "",
     },
     {
       id: "ORD-102",
@@ -48,7 +48,7 @@ const RestaurantOrder = () => {
       items: ["Cold Coffee", "Pasta"],
       total: "₹560",
       time: "1 min ago",
-      status: "new",
+      status: "",
     },
   ]);
 
@@ -96,7 +96,11 @@ const RestaurantOrder = () => {
       // new Audio("/notification.mp3").play().catch(() => {});
       toast.success("New Order Alert! 🍔");
       setOrders((prev) => [formattedOrder, ...prev]);
+
     };
+
+    // console.log(orders);
+    
 
     socket.on("new_order_received", handleNewOrder);
 
@@ -142,7 +146,7 @@ const RestaurantOrder = () => {
 
       {/* Orders Board */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-       <div onClick={ ()=>navigate('/requests')}>
+       <div onClick={ ()=> navigate('/requests')}>
          <OrderColumn
           title="New Requests"
           count={orders.filter((o) => o.status === "new").length}

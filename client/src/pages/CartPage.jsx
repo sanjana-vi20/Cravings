@@ -20,7 +20,7 @@ const CartPage = () => {
   const { user, isLogin } = useAuth();
 
   const getCartDetails = async () => {
-    const localCart = JSON.parse(localStorage.getItem("cart")) || [];
+    const localCart = JSON.parse(localStorage.getItem(`cart_${user._id}`)) || [];
 
     try {
       if (Object.keys(localCart).length === 0) {
@@ -88,7 +88,7 @@ const CartPage = () => {
       ),
     );
 
-    window.dispatchEvent(new Event("cartUpdated")); // Header update ke liye
+    // window.dispatchEvent(new Event("cartUpdated")); // Header update ke liye
   };
 
   // 3. Remove Item Logic

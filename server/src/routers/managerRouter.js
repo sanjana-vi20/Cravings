@@ -7,6 +7,7 @@ import {
   ResUserPhotoUpdate,
   ResUserResetPassword,
   ResUserUpdate,
+  UpdateUserStatus,
 } from "../controllers/restaurantController.js";
 import { ManagerProtect, Protect } from "../middleware/userMiddleware.js";
 import multer from "multer";
@@ -45,6 +46,7 @@ router.put(
 );
 
 router.get("/fetch-orders" ,Protect, GetAllPendingOrders);
+router.patch("/update-order-status/:id" , Protect, UpdateUserStatus);
 
 
 

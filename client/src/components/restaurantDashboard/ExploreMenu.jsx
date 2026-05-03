@@ -14,6 +14,7 @@ import api from '../../config/Api';
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import ItemDetailModal from "./resturantModals/ItemDetailModal";
+import { useAuth } from "../../context/AuthContext";
 
 const ExploreMenu = () => {
   const [activeCategory, setActiveCategory] = useState("All");
@@ -30,6 +31,7 @@ const ExploreMenu = () => {
   ];
 
   const [menu, setMenu] = useState();
+  const {user} = useAuth();
   const [loading, setLoading] = useState();
   const [item , setItem] = useState();
   const [cart , setCart] = useState(JSON.parse(localStorage.getItem("cart")) || {})
@@ -52,24 +54,26 @@ const ExploreMenu = () => {
     console.log(menu);
     
   };
+  console.log("before adding ittems" , cart);
+  
 
 
-    const handleAddToCart = ( restaurantName, dish) => {
-  // 1. Pehle pura cart object uthao (Local Storage se)
-  // Structure: { "restId1": {details}, "restId2": {details} }
+   const handleAddToCart = (restaurantName, dish) => {
+  // 1. Pehle check karo user login hai ya nahi (User ID chahiye humein)
+  if (!user || !user._id) {
+    toast.error("Please login to add items to cart!");
+    return;
+  }
 
-  // console.log("item : ",  user );
+  const userId = user._id; // Unique User ID
+  const cartKey = `cart_${userId}`; // Har user ki apni alag key: cart_698...
+
+  // 2. Current Cart ko copy karo
   let currentCart = { ...cart };
-  
-  console.log("cart :"  , cart);
-  console.log("item :" , dish.restaurantID._id);
-  
-  
   const restId = dish.restaurantID._id;
 
-  // 2. Check karo: Kya is restaurant ka cart pehle se bana hai?
+  // 3. Restaurant entry check/create
   if (!currentCart[restId]) {
-    // Agar nahi, toh naya entry create karo
     currentCart[restId] = {
       restaurantName: restaurantName,
       restaurantId: restId,
@@ -78,34 +82,37 @@ const ExploreMenu = () => {
     };
   }
 
-  // 3. Check karo: Kya yeh ITEM pehle se is restaurant ke cart mein hai?
+  // 4. Item check/update
   const itemIndex = currentCart[restId].items.findIndex((i) => i._id === dish._id);
 
   if (itemIndex > -1) {
-    // Agar hai, toh sirf quantity badhao
     currentCart[restId].items[itemIndex].quantity += 1;
   } else {
-    // Agar nahi hai, toh naya item object push karo
     currentCart[restId].items.push({
       _id: dish._id,
+      dishName: dish.dishName, // Dish ka naam bhi dalo taaki cart mein dikhe
       price: Number(dish.price),
-      quantity: 1
+      quantity: 1,
+      image: dish.image // Image bhi dalo toh badhiya hai
     });
   }
 
-  // 4. Uss specific restaurant ka Total Price calculate karo
+  // 5. Total Price calculation
   currentCart[restId].totalPrice = currentCart[restId].items.reduce(
     (acc, curr) => acc + curr.price * curr.quantity, 
     0
   );
 
+  // 6. State aur LocalStorage update
   setCart(currentCart);
-  localStorage.setItem("cart", JSON.stringify(cart));
   
-  // Yeh line Header ko batayegi ki "Update ho jao!"
-  window.dispatchEvent(new Event("cartUpdated"));
+  // 🔥 IMPORTANT: 'currentCart' save karo, aur 'cartKey' use karo
+  localStorage.setItem(cartKey, JSON.stringify(currentCart));
 
-  toast.success(`Added to ${restaurantName}'s cart!`);
+  toast.success(`Added ${dish.dishName} to ${restaurantName}'s cart!`);
+
+  console.log("after adding items" , cart);
+  
 };
 
   useEffect(() => {

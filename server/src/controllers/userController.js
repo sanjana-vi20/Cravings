@@ -158,12 +158,11 @@ export const UserPlaceOrder = async (req, res, next) => {
     if (io) {
       // Hum us restaurant ke "room" mein message bhej rahe hain
       console.log("emmititng");
-      
+
       io.to(restaurantId.toString()).emit("new_order_received", populatedOrder);
     }
 
     console.log("emmittedddd");
-    
 
     res
       .status(201)
@@ -171,4 +170,11 @@ export const UserPlaceOrder = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+};
+
+export const UserFetching = (req, res, next) => {
+  try {
+
+    const userId = req.user._id
+  } catch (error) {}
 };

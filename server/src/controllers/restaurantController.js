@@ -300,18 +300,60 @@ export const GetAllPendingOrders = async (req, res, next) => {
     // Manager ki ID se uske restaurant ke orders dhoondo
     // Maan lete hain ki Manager hi Restaurant ka owner hai
     const managerId = req.user._id;
+    console.log("Manager : ", managerId);
 
     const pendingOrders = await Order.find({
-      restaurantId: managerId, // Manager ki ID hi yahan restaurantId hai
+      userId: managerId, // Manager ki ID hi yahan restaurantId hai
       status: "pending", // Sirf pending wale orders
     })
       .populate("userId", "fullName email") // Customer ka naam chahiye
       .sort({ createdAt: -1 }); // Naye orders sabse upar
 
-      console.log("pendingOrders" , pendingOrders);
-      
+    console.log("pendingOrders", pendingOrders);
 
     res.status(200).json({ message: "Orders fetched", data: pendingOrders });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const UpdateUserStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params; // Order ID
+    const { status } = req.body;
+    console.log("id : " , id);
+    console.log("requserID : " ,req.user._id );
+    
+    const updatedOrder = await Order.findOneAndUpdate(
+      { _id: id, userId: req.user._id }, // Security check
+      { status: status },
+      { new: true },
+    ).populate("userId");
+
+    if (!updatedOrder) {
+      return res
+        .status(404)
+        .json({ message: "Order not found or unauthorized" });
+    }
+
+    // 3. 🔥 SOCKET NOTIFICATION (Customer ko batao)
+    const io = req.app.get("socketio");
+    if (io) {
+      // Customer (User) ki unique ID waale room mein signal bhejो
+      io.to(updatedOrder.userId._id.toString()).emit("order_status_update", {
+        orderId: updatedOrder._id,
+        status: updatedOrder.status,
+        message: `Your order is now ${updatedOrder.status}!`,
+      });
+      console.log(
+        `Signal sent to User ${updatedOrder.userId._id}: Order ${status}`,
+      );
+    }
+
+    res.status(200).json({
+      message: "Status updated successfully",
+      data: updatedOrder,
+    });
   } catch (error) {
     next(error);
   }

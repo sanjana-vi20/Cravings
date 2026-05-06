@@ -43,6 +43,11 @@ io.on("connection", (socket) => {
     socket.join(restaurantId);
     console.log(`Manager joined room: ${restaurantId}`);
   });
+  
+  socket.on("join_user", (userId) => {
+    socket.join(userId);
+    console.log(`Customer joined room: ${userId}`);
+  });
 
   socket.on("disconnect", () => {
     console.log("User Disconnected");

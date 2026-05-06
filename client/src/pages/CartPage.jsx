@@ -71,7 +71,7 @@ const CartPage = () => {
   console.log("CurrentUser: ", user);
 
   const handleQuantity = (id, resId, change) => {
-    const updatedCart = JSON.parse(localStorage.getItem("cart")) || {};
+    const updatedCart = JSON.parse(localStorage.getItem(`cart_${user._id}`)) || {};
 
     if (updatedCart[resId]) {
       updatedCart[resId].items = updatedCart[resId].items.map((i) =>
@@ -93,7 +93,7 @@ const CartPage = () => {
 
   // 3. Remove Item Logic
   const removeItem = (id, resId) => {
-    const updatedCart = JSON.parse(localStorage.getItem("cart")) || {};
+    const updatedCart = JSON.parse(localStorage.getItem(`cart_${user._id}`)) || {};
     const filtered = updatedCart[resId].items.filter((item) => item._id !== id);
     console.log("filtered : ", filtered);
 
@@ -110,7 +110,7 @@ const CartPage = () => {
     setCartItems(updatedStateArray);
     console.log("Carts : ", cartItems);
 
-    localStorage.setItem("cart", JSON.stringify(filteredCart));
+    localStorage.setItem(`cart_${user._id}`, JSON.stringify(filteredCart));
     window.dispatchEvent(new Event("cartUpdated"));
     toast.success("Item removed");
   };

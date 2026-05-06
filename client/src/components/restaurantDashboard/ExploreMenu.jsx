@@ -34,7 +34,7 @@ const ExploreMenu = () => {
   const {user} = useAuth();
   const [loading, setLoading] = useState();
   const [item , setItem] = useState();
-  const [cart , setCart] = useState(JSON.parse(localStorage.getItem("cart")) || {})
+  const [cart , setCart] = useState(JSON.parse(localStorage.getItem(`cart_${user._id}`)) || {})
   // const navigate = useNavigate()
 
   const fetchMenu = async () => {

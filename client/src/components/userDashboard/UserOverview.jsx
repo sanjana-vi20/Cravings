@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { 
   ShoppingBag, 
   Heart, 
@@ -14,10 +14,11 @@ import { useNavigate } from "react-router-dom";
 const UserOverview = ({ data }) => {
    const {isLogin , user } = useAuth();
   const navigate = useNavigate();
-  if(!isLogin)
-  {
-    navigate("/login");
-  }
+ useEffect(() => {
+    if (!isLogin) {
+      navigate("/login");
+    }
+  }, [isLogin, navigate]);
   // Dummy User Data (Aap isse AuthContext se bhi le sakte hain)
   const userdetail = {
     name: user.fullName,

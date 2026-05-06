@@ -129,6 +129,8 @@ export const UserResetPassword = async (req, res, next) => {
 export const UserPlaceOrder = async (req, res, next) => {
   try {
     const currentUser = req.user;
+    console.log("CurrentUser" , currentUser);
+    
 
     const { restaurantId, items, orderValue, status, review } = req.body;
 
@@ -172,9 +174,35 @@ export const UserPlaceOrder = async (req, res, next) => {
   }
 };
 
-export const UserFetching = (req, res, next) => {
+export const UserFetching = async(req, res, next) => {
   try {
+    const userId = req.user._id;
+    console.log("UserId : ", userId);
 
-    const userId = req.user._id
-  } catch (error) {}
+    // .find() hamesha array deta hai (khali array [] agar orders na hon)
+    // Populate karna zaroori hai taaki Restaurant Name aur Dish Details mil sakein
+    const orders = await Order.find({ userId: userId })
+      .populate({
+        path: "items.restaurantID", // Items ke andar jo restaurantID hai use populate karo
+        select: "restaurantName restaurantImage" // Sirf zaroori fields uthao
+      })
+      .sort({ createdAt: -1 }); // Naye orders sabse upar dikhane ke liye
+
+    console.log("Total Orders Found : ", orders.length);
+
+    // Note: Order.find agar kuch na dhoond paye toh [] (empty array) deta hai, null nahi.
+    if (orders.length === 0) {
+      return res
+        .status(200) // 404 ki jagah 200 dena behtar hai agar user ka koi order nahi hai
+        .json({ message: "No orders found for this user"});
+    }
+
+    res
+      .status(200) // Fetching ke liye 200 standard hai (201 creation ke liye hota hai)
+      .json({ message: "Orders fetched Successfully", data: orders });
+      
+  } catch (error) {
+    console.error("Backend Error:", error);
+    next(error);
+  }
 };

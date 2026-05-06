@@ -303,7 +303,7 @@ export const GetAllPendingOrders = async (req, res, next) => {
     console.log("Manager : ", managerId);
 
     const pendingOrders = await Order.find({
-      userId: managerId, // Manager ki ID hi yahan restaurantId hai
+      restaurantId: managerId, // Manager ki ID hi yahan restaurantId hai
       status: "pending", // Sirf pending wale orders
     })
       .populate("userId", "fullName email") // Customer ka naam chahiye
@@ -325,7 +325,7 @@ export const UpdateUserStatus = async (req, res, next) => {
     console.log("requserID : " ,req.user._id );
     
     const updatedOrder = await Order.findOneAndUpdate(
-      { _id: id, userId: req.user._id }, // Security check
+      { _id: id}, // Security check
       { status: status },
       { new: true },
     ).populate("userId");
@@ -339,7 +339,7 @@ export const UpdateUserStatus = async (req, res, next) => {
     // 3. 🔥 SOCKET NOTIFICATION (Customer ko batao)
     const io = req.app.get("socketio");
     if (io) {
-      // Customer (User) ki unique ID waale room mein signal bhejो
+      // Customer (User) ki unique ID waale room mein signal bhejोio.emit("new_order_received", savedOrder);
       io.to(updatedOrder.userId._id.toString()).emit("order_status_update", {
         orderId: updatedOrder._id,
         status: updatedOrder.status,

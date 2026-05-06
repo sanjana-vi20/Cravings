@@ -11,6 +11,8 @@ export const RazorpayGetKey = async (req, res, next) => {
 
 export const RazorPayCreateOrder = async (req, res, next) => {
   try {
+    console.log("backend");
+    
     const { amount } = req.body;
 
     if (!amount) {
@@ -22,8 +24,10 @@ export const RazorPayCreateOrder = async (req, res, next) => {
     
 
     const Total = Number(amount);
+    console.log(Total);
+    
     const RazorPayOptions = {
-      amount: Math.round(Total),
+      amount: Math.round(Total * 100),
       currency: "INR",
       receipt: `CravingReciept_${Date.now()}_${Math.floor(Math.random() * 100000)}`,
     };

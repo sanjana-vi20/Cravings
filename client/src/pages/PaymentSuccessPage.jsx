@@ -11,6 +11,9 @@ const PaymentSuccessPage = () => {
   const navigate = useNavigate();
   const order = location.state; // Backend se aaya populatedOrder data
 
+  console.log(order);
+  
+
   useEffect(() => {
     if (!order) {
       toast.error("Order session expired!");

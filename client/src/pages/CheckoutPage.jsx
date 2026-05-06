@@ -32,7 +32,9 @@ const CheckoutPage = () => {
     }
   };
 
-  // console.log("items" , items);
+  console.log("items" , items);
+  console.log("UserId : " , user);
+  
   
   
   const GeneratePayload = (RazorpayOrderID, RazorpayPaymentID) => {
@@ -62,7 +64,7 @@ const CheckoutPage = () => {
 };
 
   const handleRazorpayPayment = async () => {
-    // console.log("BillDetails : " , billDetails);
+    console.log("BillDetails : " , billDetails);
     const total = billDetails.grandTotal;
 
     try {
@@ -108,6 +110,8 @@ const CheckoutPage = () => {
             );
 
             const OrderRes = await api.post("/user/placeorder", payload);
+            console.log("full data",OrderRes);
+            
             console.log("Order completed");
             
 

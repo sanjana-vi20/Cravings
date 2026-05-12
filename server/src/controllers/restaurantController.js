@@ -330,6 +330,9 @@ export const UpdateUserStatus = async (req, res, next) => {
       { new: true },
     ).populate("userId");
 
+    console.log(updatedOrder);
+    
+
     if (!updatedOrder) {
       return res
         .status(404)

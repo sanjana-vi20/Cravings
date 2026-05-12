@@ -126,3 +126,7 @@ export const RiderResetPassword = async (req, res, next) => {
     next(error);
   }
 };
+
+export const GetAllOrders = (req, res, next) => {
+  
+}

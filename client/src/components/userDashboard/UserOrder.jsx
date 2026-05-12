@@ -27,30 +27,32 @@ const UserOrder = () => {
 
   // --- 1. Initial Load & Socket Listener ---
   useEffect(() => {
-      socket.connect();
-  
-      if (user?._id) {
-        socket.emit("join_restaurant", user._id);
-      }
-  
-      socket.on("connect", () => {
-        console.log("Socket connected! ID:", socket.id);
-      });
-  
-      // Ye check karne ke liye ki backend se kuch bhi aa raha hai ya nahi
-      socket.onAny((eventName, ...args) => {
-        console.log(`Event: ${eventName}`, args);
-      });
-    },[user?._id])
+    socket.connect();
 
-  useEffect(() => {
-    // AOS.init({ duration: 800 });
-    fetchMyOrders();
+    if (user?._id) {
+      socket.emit("join_restaurant", user._id);
+    }
 
-    const handleStatusUpdate = (data) => {
+    socket.on("connect", () => {
+      console.log("Socket connected! ID:", socket.id);
+    });
+
+    // Ye check karne ke liye ki backend se kuch bhi aa raha hai ya nahi
+    socket.onAny((eventName, ...args) => {
+      console.log(`Event: ${eventName}`, args);
+    });
+  }, [user?._id]);
+
+  const handleStatusUpdate = async (data , nextStatus) => {
       // List update karo
       console.log("Data AAYA hai naya or vo ye hai ", data);
 
+      const res = await api.patch(
+        `/restaurant/update-order-status/${data}`,
+        {
+          status: nextStatus,
+        },
+      );
       setOrders((prev) =>
         prev.map((order) =>
           order._id === data.orderId
@@ -67,6 +69,10 @@ const UserOrder = () => {
         return current;
       });
     };
+
+  useEffect(() => {
+    // AOS.init({ duration: 800 });
+    fetchMyOrders();
 
     socket.on("order_status_update", handleStatusUpdate);
 
@@ -340,7 +346,7 @@ const UserOrder = () => {
 
               <button
                 className="w-full py-5 bg-[#842A3B] text-[#F5DAA7] rounded-[2rem] font-black text-[10px] tracking-[0.4em] uppercase shadow-2xl shadow-[#842A3B]/30 hover:bg-slate-900 transition-all duration-500"
-                onClick={() => handleStatusUpdate(selectedOrder.restaurantID)}
+                onClick={() => {handleStatusUpdate(selectedOrder._id , "cancelled")}}
               >
                 Cancel Order
               </button>

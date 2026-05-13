@@ -28,6 +28,9 @@ export const ResUserUpdate = async (req, res, next) => {
     } = req.body;
     const currentUser = req.user;
 
+    console.log(lat);
+    console.log(lon);
+
     // if (fullName || email || mobnumber) {
     //   const error = new Error("All Fields are Required");
     //   error.statusCode = 400;
@@ -321,17 +324,16 @@ export const UpdateUserStatus = async (req, res, next) => {
   try {
     const { id } = req.params; // Order ID
     const { status } = req.body;
-    console.log("id : " , id);
-    console.log("requserID : " ,req.user._id );
-    
+    console.log("id : ", id);
+    console.log("requserID : ", req.user._id);
+
     const updatedOrder = await Order.findOneAndUpdate(
-      { _id: id}, // Security check
+      { _id: id }, // Security check
       { status: status },
       { new: true },
     ).populate("userId");
 
     console.log(updatedOrder);
-    
 
     if (!updatedOrder) {
       return res
@@ -348,9 +350,13 @@ export const UpdateUserStatus = async (req, res, next) => {
         status: updatedOrder.status,
         message: `Your order is now ${updatedOrder.status}!`,
       });
-      console.log(
-        `Signal sent to User ${updatedOrder.userId._id}: Order ${status}`,
-      );
+
+      io.emit("rider_dashboard_update", {
+        orderId: updatedOrder._id,
+        status: updatedOrder.status,
+        updatedOrder: updatedOrder, // Pura object bhej rahi hain taaki list update ho sake
+      });
+      console.log(`Signal sent to User and Riders: Order ${status}`);
     }
 
     res.status(200).json({

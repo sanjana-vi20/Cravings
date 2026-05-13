@@ -96,16 +96,19 @@ const EditResturantProfile = ({ onClose }) => {
 
   const fetchLocation = (e) => {
     e.preventDefault();
-    navigator.geolocation.getCurrentPosition((result) => {
-      setFormData({
-        ...formData,
-        geoLocation: {
-          lat: result.coords.latitude,
-          lon: result.coords.longitude,
-        },
-      });
-      toast.success("Location updated!");
-    });
+    navigator.geolocation.getCurrentPosition(
+      (result) => {
+        setFormData({
+          ...formData,
+          geoLocation: {
+            lat: result.coords.latitude,
+            lon: result.coords.longitude,
+          },
+        });
+        toast.success("GPS Coordinates Captured!");
+      },
+      () => toast.error("Please enable location permissions"),
+    );
   };
 
   const validateForm = () => {
@@ -118,6 +121,9 @@ const EditResturantProfile = ({ onClose }) => {
   };
 
   const handleSubmit = async (e) => {
+
+    console.log(formData);
+    
     e.preventDefault();
     if (!validateForm()) return;
     setLoading(true);

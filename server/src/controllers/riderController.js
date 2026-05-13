@@ -1,5 +1,7 @@
 import cloudinary from "../config/cloudinary.js";
-import bcrypt from 'bcrypt'
+import bcrypt from "bcrypt";
+import Order from "../models/orderModel.js";
+import { calculateDistance } from "../utils/riderUtility.js";
 
 export const RiderUpdate = async (req, res, next) => {
   try {
@@ -127,6 +129,91 @@ export const RiderResetPassword = async (req, res, next) => {
   }
 };
 
-export const GetAllOrders = (req, res, next) => {
-  
-}
+export const GetAllOrders = async (req, res, next) => {
+  try {
+    //console.log("RiderGetAvailableOrder called with body: ", req.body);
+    const { lat, lng } = req.query;
+    console.log("Latitude: ", lat, "Longitude: ", lng);
+
+    const availableOrders = await Order.find({
+      riderId: null,
+      status: { $in: ["ready", "pickedUp", "onTheWay"] },
+    })
+      .populate("userId")
+      .populate("restaurantId");
+
+    console.log(
+      "Available Orders before distance calculation: ",
+      availableOrders,
+    );
+
+    availableOrders.map((order) => {
+      console.log(order.restaurantId.geoLocation);
+    });
+
+    const AvailableOrdersWithDistance = await calculateDistance(
+      availableOrders,
+      lat,
+      lng,
+    );
+
+    console.log(
+      "Available Orders With Distance: ",
+      AvailableOrdersWithDistance,
+    );
+
+    res.status(200).json({
+      message: "Available Orders Fetched Successfully",
+      data: AvailableOrdersWithDistance,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const UpdateOrderStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params; // Order ID
+    const { status } = req.body; // Rider frontend se status aayega: "onTheWay" ya "delivered"
+
+    // 1. Database update karein
+    const updatedOrder = await Order.findOneAndUpdate(
+      { _id: id }, 
+      { status: status },
+      { new: true }
+    ).populate("userId"); // Customer details populate kar rahe hain notification ke liye
+
+    if (!updatedOrder) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    // 2. 🔥 SOCKET NOTIFICATION
+    const io = req.app.get("socketio");
+    if (io) {
+      // (A) CUSTOMER KO BATAO: "Rider is coming" ya "Order Delivered"
+      io.to(updatedOrder.userId._id.toString()).emit("order_status_update", {
+        orderId: updatedOrder._id,
+        status: updatedOrder.status,
+        message: status === "onTheWay" 
+          ? "Rider has picked up your order! 🚀" 
+          : "Order delivered successfully! ✅",
+      });
+
+      // (B) BAAKI RIDERS KO BATAO: Taaki unke dashboard se ye hat jaye ya update ho jaye
+      io.emit("rider_dashboard_update", {
+        orderId: updatedOrder._id,
+        status: updatedOrder.status,
+        updatedOrder: updatedOrder,
+      });
+
+      console.log(`Rider updated Order ${id} to ${status}`);
+    }
+
+    res.status(200).json({
+      message: `Order status updated to ${status}`,
+      data: updatedOrder,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

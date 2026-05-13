@@ -51,17 +51,18 @@ const RestaurantOrder = () => {
       setOrders((prev) => [newOrder, ...prev]);
     });
 
-    return () => {
-      socket.off("new_order_received");
-    };
+  return () => {
+    socket.off("new_order_received");
+    socket.disconnect();
+  }
   }, [user?._id, fetchOrders]);
 
   // --- 3. Handle Status Update (Moving between columns) ---
   const handleUpdateStatus = async (orderId, currentStatus) => {
     let nextStatus = "";
-    if (currentStatus === "pending") nextStatus = "preparing";
+    if (currentStatus === "pending") nextStatus = "accepted";
+    else if (currentStatus === "accepted") nextStatus = "preparing";
     else if (currentStatus === "preparing") nextStatus = "ready";
-    else if (currentStatus === "ready") nextStatus = "delivered";
 
     try {
       const res = await api.patch(
@@ -138,10 +139,10 @@ const RestaurantOrder = () => {
           title="In Kitchen"
           icon={<ChefHat className="text-orange-600" />}
           bg="bg-orange-50"
-          count={orders.filter((o) => o.status === "preparing").length}
+          count={orders.filter((o) => o.status === "accepted").length}
         >
           {orders
-            .filter((o) => o.status === "preparing")
+            .filter((o) => o.status === "accepted")
             .map((order) => (
               <OrderCard
                 key={order._id}
@@ -158,10 +159,10 @@ const RestaurantOrder = () => {
           title="Ready for Pickup"
           icon={<CheckCircle2 className="text-green-600" />}
           bg="bg-green-50"
-          count={orders.filter((o) => o.status === "ready").length}
+          count={orders.filter((o) => o.status === "preparing").length}
         >
           {orders
-            .filter((o) => o.status === "ready")
+            .filter((o) => o.status === "preparing")
             .map((order) => (
               <OrderCard
                 key={order._id}
@@ -379,9 +380,9 @@ const OrderCard = ({ order, color, onUpdate, onDetails }) => (
       >
         {order.status === "pending"
           ? "Accept"
-          : order.status === "preparing"
-            ? "Ready"
-            : "Picked"}
+          : order.status === "accepted"
+            ? "ready"
+            : "ready for Pickup"}
       </button>
     </div>
   </div>

@@ -43,32 +43,36 @@ const UserOrder = () => {
     });
   }, [user?._id]);
 
-  const handleStatusUpdate = async (data , nextStatus) => {
-      // List update karo
-      console.log("Data AAYA hai naya or vo ye hai ", data);
-
+  const handleStatusUpdate = async (orderId, nextStatus) => {
+    try {
+      setLoading(true);
       const res = await api.patch(
-        `/restaurant/update-order-status/${data}`,
-        {
-          status: nextStatus,
-        },
+        `/restaurant/update-order-status/${orderId}`,
+        { status: nextStatus },
       );
+
+      // Update local state
       setOrders((prev) =>
         prev.map((order) =>
-          order._id === data.orderId
-            ? { ...order, status: data.status }
-            : order,
+          order._id === orderId ? { ...order, status: nextStatus } : order,
         ),
       );
 
-      // Selected order card update karo (using functional update to avoid dependency loop)
+      // Update selected card
       setSelectedOrder((current) => {
-        if (current?._id === data.orderId) {
-          return { ...current, status: data.status };
+        if (current?._id === orderId) {
+          return { ...current, status: nextStatus };
         }
         return current;
       });
-    };
+
+      toast.success(`Order ${nextStatus}!`);
+    } catch (err) {
+      toast.error("Update failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     // AOS.init({ duration: 800 });
@@ -130,8 +134,10 @@ const UserOrder = () => {
       accepted: 35,
       preparing: 55,
       ready: 75,
-      onTheWay: 85,
+      pickedUp: 80,
+      onTheWay: 90,
       delivered: 100,
+      damaged: 100, // Progress bar full dikhayenge but color change kar sakte hain
       rejected: 0,
       cancelled: 0,
     };
@@ -344,12 +350,45 @@ const UserOrder = () => {
                 </div>
               </div>
 
-              <button
-                className="w-full py-5 bg-[#842A3B] text-[#F5DAA7] rounded-[2rem] font-black text-[10px] tracking-[0.4em] uppercase shadow-2xl shadow-[#842A3B]/30 hover:bg-slate-900 transition-all duration-500"
-                onClick={() => {handleStatusUpdate(selectedOrder._id , "cancelled")}}
-              >
-                Cancel Order
-              </button>
+              {/* Action Buttons: Conditional Rendering */}
+              <div className="space-y-3">
+                {/* CANCEL ORDER: Sirf tab dikhega jab order Delivered/PickedUp/OnTheWay NAHI hai */}
+                {["pending", "accepted", "preparing"].includes(
+                  selectedOrder.status,
+                ) && (
+                  <button
+                    className="w-full py-5 bg-red-50 text-red-600 border border-red-100 rounded-[2rem] font-black text-[10px] tracking-[0.4em] uppercase hover:bg-red-600 hover:text-white transition-all duration-500"
+                    onClick={() => {
+                      handleStatusUpdate(selectedOrder._id, "cancelled");
+                    }}
+                  >
+                    Cancel Order
+                  </button>
+                )}
+
+                {/* REPORT DAMAGE: Sirf tab dikhega jab order DELIVERED ho chuka ho */}
+                {selectedOrder.status === "delivered" && (
+                  <button
+                    className="w-full py-5 bg-orange-50 text-orange-600 border border-orange-100 rounded-[2rem] font-black text-[10px] tracking-[0.4em] uppercase hover:bg-orange-600 hover:text-white transition-all duration-500 shadow-lg shadow-orange-100"
+                    onClick={() => {
+                      // Aap yahan ek naya function ya modal open kar sakti hain
+                      handleStatusUpdate(selectedOrder._id, "damaged");
+                      toast.error("Damage reported. Support will contact you.");
+                    }}
+                  >
+                    Report Item Damaged ⚠️
+                  </button>
+                )}
+
+                {/* Helpful Message for Active Orders that can't be cancelled anymore */}
+                {["ready", "pickedUp", "onTheWay"].includes(
+                  selectedOrder.status,
+                ) && (
+                  <p className="text-center text-[9px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 py-4 rounded-2xl">
+                    Order is in transit and cannot be cancelled.
+                  </p>
+                )}
+              </div>
             </div>
           ) : (
             <div className="h-[550px] border-4 border-dashed border-slate-100 rounded-[4rem] flex flex-col items-center justify-center text-slate-200 gap-4 bg-white/50 backdrop-blur-sm">

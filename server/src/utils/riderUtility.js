@@ -1,34 +1,39 @@
 import axios from "axios";
 
-export const calculateDistance = async (orders, lat, lon) => {
+export const calculateDistance = (orders, riderLat, riderLon) => {
   try {
     if (!Array.isArray(orders)) return [];
 
-    const ordersWithDistance = orders.map((order) => {
-      const restaurantLat = order.restaurantId?.geoLocation?.lat;
-      const restaurantLon = order.restaurantId?.geoLocation?.lon;
+    return orders.map((order) => {
+      // 1. Restaurant ki location nikalna (JSON structure ke hisaab se)
+      const restaurantLat =
+        order.items?.[0]?.restaurantID?.geoLocation?.lat ||
+        order.restaurantId?.geoLocation?.lat;
+      const restaurantLon =
+        order.items?.[0]?.restaurantID?.geoLocation?.lon ||
+        order.restaurantId?.geoLocation?.lon;
 
-      const distance = getDistanceFromLatLonInKm(
-        lat,
-        lon,
-        restaurantLat,
-        restaurantLon
-      );
+      let distance = 0;
+      if (restaurantLat && restaurantLon) {
+        // 2. Haversine formula call karna
+        distance = getDistanceFromLatLonInKm(
+          parseFloat(riderLat),
+          parseFloat(riderLon),
+          parseFloat(restaurantLat),
+          parseFloat(restaurantLon),
+        );
+      }
 
+      // 3. Nayi fields add karna bina purana data lose kiye
       return {
-        ...(order._doc || order), 
-        distanceFromRider: distance, // Sorting ke liye pure number
-        totalDistance: `${distance.toFixed(2)} km`, // Frontend pe dikhane ke liye readable string
+        ...(order.toObject ? order.toObject() : order), // Mongoose doc ko plain object banana
+        distanceFromRider: distance, // Sorting ke liye numeric value
+        totalDistance: `${distance.toFixed(2)} km`, // Display ke liye string
       };
     });
-
-    // Distance ke hisaab se sort karein (Sabse paas wala upar)
-    ordersWithDistance.sort((a, b) => a.distanceFromRider - b.distanceFromRider);
-
-    return ordersWithDistance;
   } catch (error) {
-    console.error("Sort Error:", error);
-    throw error;
+    console.error("Distance Calc Error:", error);
+    return orders;
   }
 };
 
@@ -38,8 +43,10 @@ const getDistanceFromLatLonInKm = (lat1, lon1, lat2, lon2) => {
   const dLon = deg2rad(lon2 - lon1);
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    Math.cos(deg2rad(lat1)) *
+      Math.cos(deg2rad(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c; // Distance in km
 };

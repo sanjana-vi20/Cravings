@@ -4,23 +4,26 @@ import api from "../../../config/Api";
 
 const EditProfileModal = ({ onClose }) => {
   const { user, setUser, setIsLogin } = useAuth();
+  
+  const cleanValue = (val) => (val === "N/A" || !val ? "" : val);
+
   const [formData, setFormData] = useState({
-    fullName: user?.fullName || "",
+    fullName: cleanValue(user?.fullName),
     email: user?.email || "",
-    mobnumber: user?.mobnumber || "",
-    gender: user?.gender || "",
-    dob: user?.dob || "",
-    address: user?.address || "",
-    city: user?.city || "",
-    pin: user?.pin || "",
+    mobnumber: cleanValue(user?.mobnumber),
+    gender: cleanValue(user?.gender),
+    dob: cleanValue(user?.dob),
+    address: cleanValue(user?.address),
+    city: cleanValue(user?.city),
+    pin: cleanValue(user?.pin),
     documents: {
-      uidai: user?.documents?.uidai || "",
-      pan: user?.documents?.pan || "",
+      uidai: cleanValue(user?.documents?.uidai),
+      pan: cleanValue(user?.documents?.pan),
     },
     paymentDetails: {
-      upi: user?.paymentDetails?.upi || "",
-      account_number: user?.paymentDetails?.account_number || "",
-      ifs_Code: user?.paymentDetails?.ifs_Code || "",
+      upi: cleanValue(user?.paymentDetails?.upi),
+      account_number: cleanValue(user?.paymentDetails?.account_number),
+      ifs_Code: cleanValue(user?.paymentDetails?.ifs_Code),
     },
     geoLocation: {
       lat: user?.geoLocation?.lat || "",
@@ -34,46 +37,24 @@ const EditProfileModal = ({ onClose }) => {
 
   const validateForm = () => {
     const newErrors = {};
+    const isEmpty = (val) => !val || val.toString().trim() === "" || val === "N/A";
 
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = "Full name is required";
-    }
+    if (isEmpty(formData.fullName)) newErrors.fullName = "Full name is required";
+    if (isEmpty(formData.mobnumber)) newErrors.mobnumber = "Mobile is required";
+    if (isEmpty(formData.gender)) newErrors.gender = "Select gender";
+    if (isEmpty(formData.dob)) newErrors.dob = "DOB is required";
+    if (isEmpty(formData.address)) newErrors.address = "Address is required";
+    if (isEmpty(formData.city)) newErrors.city = "City is required";
+    if (isEmpty(formData.pin)) newErrors.pin = "PIN is required";
+    
+    if (!formData.geoLocation.lat) newErrors.location = "Live location required";
 
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email";
-    }
-
-    if (!formData.mobnumber.trim()) {
-      newErrors.mobnumber = "Mobile number is required";
-    } else if (!/^\d{10}$/.test(formData.mobnumber.replace(/\D/g, ""))) {
-      newErrors.mobnumber = "Mobile number must be 10 digits";
-    }
-
-    if (!formData.city.trim()) {
-      newErrors.city = "City is required";
-    }
-
-    if (!formData.pin.trim()) {
-      newErrors.pin = "PIN code is required";
-    } else if (!/^\d{6}$/.test(formData.pin)) {
-      newErrors.pin = "PIN code must be 6 digits";
-    }
-
-    // if (
-    //   formData.documents.pan &&
-    //   !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(formData.documents.pan)
-    // ) {
-    //   newErrors.pan = "Invalid PAN format";
-    // }
-
-    if (
-      formData.paymentDetails.upi &&
-      !/^[a-zA-Z0-9._-]+@[a-zA-Z]{3,}$/.test(formData.paymentDetails.upi)
-    ) {
-      newErrors.upi = "Invalid UPI format";
-    }
+    if (isEmpty(formData.documents.uidai)) newErrors.uidai = "Aadhaar is required";
+    if (isEmpty(formData.documents.pan)) newErrors.pan = "PAN is required";
+    
+    if (isEmpty(formData.paymentDetails.upi)) newErrors.upi = "UPI is required";
+    if (isEmpty(formData.paymentDetails.account_number)) newErrors.account_number = "Account No. required";
+    if (isEmpty(formData.paymentDetails.ifs_Code)) newErrors.ifs_Code = "IFSC required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -81,427 +62,164 @@ const EditProfileModal = ({ onClose }) => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-    // Clear error for this field when user starts typing
-    if (errors[name]) {
-      setErrors({ ...errors, [name]: "" });
-    }
+    setFormData({ ...formData, [name]: value });
+    if (errors[name]) setErrors({ ...errors, [name]: "" });
   };
 
   const handleNestedChange = (parent, field, value) => {
-    setFormData({
-      ...formData,
-      [parent]: {
-        ...formData[parent],
-        [field]: value,
-      },
-    });
-    // Clear error for this field
-    if (errors[field]) {
-      setErrors({ ...errors, [field]: "" });
-    }
+    setFormData({ ...formData, [parent]: { ...formData[parent], [field]: value } });
+    if (errors[field]) setErrors({ ...errors, [field]: "" });
   };
 
   const fetchLocation = (e) => {
     e.preventDefault();
-    console.log("fetchLocation");
-    navigator.geolocation.getCurrentPosition((result) => {
-      console.log(
-        "Location Result:",
-        result.coords.latitude,
-        result.coords.longitude,
-      );
+    navigator.geolocation.getCurrentPosition((res) => {
       setFormData({
         ...formData,
-        geoLocation: {
-          ...formData["geoLocation"],
-          lat: result.coords.latitude,
-          lon: result.coords.longitude,
-        },
+        geoLocation: { lat: res.coords.latitude, lon: res.coords.longitude }
       });
-    });
+      setErrors({ ...errors, location: "" });
+    }, () => alert("Enable location access"));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!validateForm()) {
-      setMessage({ type: "error", text: "Please fix the errors above" });
+      setMessage({ type: "error", text: "Please fill all mandatory fields correctly." });
       return;
     }
-
     setLoading(true);
-    setMessage({ type: "", text: "" });
-
     try {
       const res = await api.put("/user/update", formData);
       if (res.data?.data) {
         sessionStorage.setItem("CravingUser", JSON.stringify(res.data.data));
         setUser(res.data.data);
-        setIsLogin(true);
         setMessage({ type: "success", text: "Profile updated successfully!" });
         setTimeout(() => onClose(), 1500);
       }
-    } catch (error) {
-      console.log(error);
-      setMessage({
-        type: "error",
-        text: error.response?.data?.message || "Failed to update profile",
-      });
+    } catch (err) {
+      setMessage({ type: "error", text: "Something went wrong. Please try again." });
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <>
-      <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-100">
-        <div className="bg-white w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-lg shadow-lg">
-          <div className="flex justify-between px-6 py-4 border-b border-gray-300 items-center sticky top-0 bg-white">
-            <h2 className="text-xl font-semibold text-gray-800">
-              Edit Profile
-            </h2>
-            <button
-              onClick={() => onClose()}
-              className="text-gray-600 hover:text-red-600 text-2xl transition"
-            >
-              x
-            </button>
-          </div>
+  // Helper UI component for input fields
+  const FormInput = ({ label, name, value, onChange, error, type = "text", disabled = false, placeholder = "" }) => (
+    <div className="flex flex-col">
+      <label className="text-sm font-semibold text-gray-600 mb-1">{label}</label>
+      <input
+        type={type}
+        name={name}
+        value={value}
+        onChange={onChange}
+        disabled={disabled}
+        placeholder={placeholder}
+        className={`w-full px-4 py-2 rounded-lg border transition-all outline-none ${
+          disabled ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" :
+          error ? "border-red-500 bg-red-50" : "border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+        }`}
+      />
+      {error && <span className="text-red-500 text-[11px] mt-1 font-medium">{error}</span>}
+    </div>
+  );
 
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+      <div className="bg-white w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl animate-in fade-in zoom-in duration-300">
+        {/* Header */}
+        <div className="flex justify-between items-center px-8 py-5 border-b border-gray-100 sticky top-0 bg-white/95 backdrop-blur-md z-10">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800">Edit Profile</h2>
+            <p className="text-sm text-gray-500">Update your information to keep your profile current.</p>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-red-50 rounded-full text-gray-400 hover:text-red-500 transition-colors">
+            <span className="text-3xl leading-none">&times;</span>
+          </button>
+        </div>
+
+        {/* Form Body */}
+        <form onSubmit={handleSubmit} className="p-8 space-y-10">
           {message.text && (
-            <div
-              className={`mx-6 mt-4 p-4 rounded-md ${
-                message.type === "success"
-                  ? "bg-green-100 text-green-700 border border-green-300"
-                  : "bg-red-100 text-red-700 border border-red-300"
-              }`}
-            >
-              {message.text}
+            <div className={`p-4 rounded-xl border flex items-center gap-3 ${message.type === "success" ? "bg-green-50 border-green-200 text-green-700" : "bg-red-50 border-red-200 text-red-700"}`}>
+              <span className="text-lg">{message.type === "success" ? "✓" : "⚠"}</span>
+              <p className="font-medium text-sm">{message.text}</p>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
-            {/* Personal Information Section */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-200">
-                Personal Information
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Full Name *
-                  </label>
-                  <input
-                    type="text"
-                    name="fullName"
-                    value={formData.fullName}
-                    onChange={handleInputChange}
-                    className={`w-full border rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.fullName ? "border-red-500" : "border-gray-300"
-                    }`}
-                    placeholder="Enter your full name"
-                  />
-                  {errors.fullName && (
-                    <p className="text-red-600 text-xs mt-1">
-                      {errors.fullName}
-                    </p>
-                  )}
-                </div>
+          {/* Section: Personal */}
+          <div className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 space-y-6">
+            <h3 className="text-sm uppercase tracking-wider font-bold text-blue-600 flex items-center gap-2">
+              <span className="w-2 h-2 bg-blue-600 rounded-full"></span> Personal Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormInput label="Full Name *" name="fullName" value={formData.fullName} onChange={handleInputChange} error={errors.fullName} placeholder="e.g. John Doe" />
+              <FormInput label="Email Address" name="email" value={formData.email} disabled />
+              <FormInput label="Mobile Number *" name="mobnumber" value={formData.mobnumber} onChange={handleInputChange} error={errors.mobnumber} placeholder="10-digit number" />
+              <div className="flex flex-col">
+                <label className="text-sm font-semibold text-gray-600 mb-1">Gender *</label>
+                <select name="gender" value={formData.gender} onChange={handleInputChange} className={`w-full px-4 py-2 rounded-lg border outline-none ${errors.gender ? "border-red-500 bg-red-50" : "border-gray-300 focus:border-blue-500"}`}>
+                  <option value="">Select</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+                {errors.gender && <span className="text-red-500 text-[11px] mt-1">{errors.gender}</span>}
+              </div>
+              <FormInput label="Date of Birth *" name="dob" type="date" value={formData.dob} onChange={handleInputChange} error={errors.dob} />
+            </div>
+          </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    disabled
-                    className="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-gray-100 text-gray-600 cursor-not-allowed"
-                  />
-                  <p className="text-gray-500 text-xs mt-1">
-                    Email cannot be changed
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Mobile Number *
-                  </label>
-                  <input
-                    type="tel"
-                    name="mobnumber"
-                    value={formData.mobnumber}
-                    onChange={handleInputChange}
-                    className={`w-full border rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.mobnumber ? "border-red-500" : "border-gray-300"
-                    }`}
-                    placeholder="10-digit mobile number"
-                  />
-                  {errors.mobnumber && (
-                    <p className="text-red-600 text-xs mt-1">
-                      {errors.mobnumber}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Gender
-                  </label>
-                  <select
-                    name="gender"
-                    value={formData.gender}
-                    onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Select Gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Date of Birth
-                  </label>
-                  <input
-                    type="date"
-                    name="dob"
-                    value={formData.dob}
-                    onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+          {/* Section: Address */}
+          <div className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 space-y-6">
+            <h3 className="text-sm uppercase tracking-wider font-bold text-blue-600 flex items-center gap-2">
+              <span className="w-2 h-2 bg-blue-600 rounded-full"></span> Address & Location
+            </h3>
+            <div className="grid grid-cols-1 gap-6">
+              <FormInput label="Complete Address *" name="address" value={formData.address} onChange={handleInputChange} error={errors.address} placeholder="Street, Apartment, Landmark" />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <FormInput label="City *" name="city" value={formData.city} onChange={handleInputChange} error={errors.city} />
+                <FormInput label="PIN Code *" name="pin" value={formData.pin} onChange={handleInputChange} error={errors.pin} />
+                <div className="flex flex-col justify-end">
+                  <button type="button" onClick={fetchLocation} className={`px-4 py-2.5 rounded-lg border font-semibold flex items-center justify-center gap-2 transition-all ${formData.geoLocation.lat ? "bg-green-50 border-green-200 text-green-700" : "bg-white border-blue-200 text-blue-600 hover:bg-blue-50"}`}>
+                    {formData.geoLocation.lat ? "📍 Location Captured" : "📍 Get Live Location"}
+                  </button>
+                  {errors.location && <span className="text-red-500 text-[11px] mt-1 font-medium">{errors.location}</span>}
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* Address Section */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-200">
-                Address
-              </h3>
-              <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Address
-                  </label>
-                  <input
-                    type="text"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter your address"
-                  />
-                </div>
-
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      City *
-                    </label>
-                    <input
-                      type="text"
-                      name="city"
-                      value={formData.city}
-                      onChange={handleInputChange}
-                      className={`w-full border rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        errors.city ? "border-red-500" : "border-gray-300"
-                      }`}
-                      placeholder="Enter city"
-                    />
-                    {errors.city && (
-                      <p className="text-red-600 text-xs mt-1">{errors.city}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      PIN Code *
-                    </label>
-                    <input
-                      type="text"
-                      name="pin"
-                      value={formData.pin}
-                      onChange={handleInputChange}
-                      className={`w-full border rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        errors.pin ? "border-red-500" : "border-gray-300"
-                      }`}
-                      placeholder="6-digit PIN"
-                      maxLength="6"
-                    />
-                    {errors.pin && (
-                      <p className="text-red-600 text-xs mt-1">{errors.pin}</p>
-                    )}
-                  </div>
-                  <div className="flex items-end">
-                    <div className="h-fit flex items-center w-full gap-4">
-                      <button
-                        className="w-full border border-gray-300 rounded-md shadow-sm p-2 h-fit"
-                        onClick={fetchLocation}
-                      >
-                        Get Live Location
-                         {formData.geoLocation.lat !== "N/A" &&
-                      formData.geoLocation.lon !== "N/A"
-                        ? "✅"
-                        : "❌"}
-                      </button>
-                     
-                      {/* {console.log(formData)} */}
-                    </div>
-                  </div>
-                </div>
-              </div>
+          {/* Section: Documents & Payment */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Documents */}
+            <div className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 space-y-6">
+              <h3 className="text-sm uppercase tracking-wider font-bold text-blue-600 flex items-center gap-2">Documents</h3>
+              <FormInput label="Aadhaar Number (12-digit) *" value={formData.documents.uidai} onChange={(e) => handleNestedChange("documents", "uidai", e.target.value)} error={errors.uidai} />
+              <FormInput label="PAN Number *" value={formData.documents.pan} onChange={(e) => handleNestedChange("documents", "pan", e.target.value)} error={errors.pan} />
             </div>
 
-            {/* Documents Section */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-200">
-                Documents
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Aadhaar (UIDAI)
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.documents.uidai}
-                    onChange={(e) =>
-                      handleNestedChange("documents", "uidai", e.target.value)
-                    }
-                    className="w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="12-digit UIDAI number"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    PAN
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.documents.pan}
-                    onChange={(e) =>
-                      handleNestedChange("documents", "pan", e.target.value)
-                    }
-                    className={`w-full border rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.pan ? "border-red-500" : "border-gray-300"
-                    }`}
-                    placeholder="PAN number"
-                    maxLength="10"
-                  />
-                  {errors.pan && (
-                    <p className="text-red-600 text-xs mt-1">{errors.pan}</p>
-                  )}
-                </div>
-              </div>
+            {/* Payment */}
+            <div className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 space-y-6">
+              <h3 className="text-sm uppercase tracking-wider font-bold text-blue-600 flex items-center gap-2">Payment Details</h3>
+              <FormInput label="UPI ID *" value={formData.paymentDetails.upi} onChange={(e) => handleNestedChange("paymentDetails", "upi", e.target.value)} error={errors.upi} placeholder="username@upi" />
+              <FormInput label="Account Number *" value={formData.paymentDetails.account_number} onChange={(e) => handleNestedChange("paymentDetails", "account_number", e.target.value)} error={errors.account_number} />
+              <FormInput label="IFSC Code *" value={formData.paymentDetails.ifs_Code} onChange={(e) => handleNestedChange("paymentDetails", "ifs_Code", e.target.value)} error={errors.ifs_Code} />
             </div>
+          </div>
 
-            {/* Payment Details Section */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-200">
-                Payment Details
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    UPI ID
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.paymentDetails.upi}
-                    onChange={(e) =>
-                      handleNestedChange(
-                        "paymentDetails",
-                        "upi",
-                        e.target.value,
-                      )
-                    }
-                    className={`w-full border rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.upi ? "border-red-500" : "border-gray-300"
-                    }`}
-                    placeholder="username@bank"
-                  />
-                  {errors.upi && (
-                    <p className="text-red-600 text-xs mt-1">{errors.upi}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Account Number
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.paymentDetails.account_number}
-                    onChange={(e) =>
-                      handleNestedChange(
-                        "paymentDetails",
-                        "account_number",
-                        e.target.value,
-                      )
-                    }
-                    className="w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Bank account number"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    IFS Code
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.paymentDetails.ifs_Code}
-                    onChange={(e) =>
-                      handleNestedChange(
-                        "paymentDetails",
-                        "ifs_Code",
-                        e.target.value,
-                      )
-                    }
-                    className="w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="IFS code"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Form Actions */}
-            <div className="flex justify-end space-x-4 pt-6 border-t border-gray-300">
-              <button
-                type="button"
-                onClick={() => onClose()}
-                disabled={loading}
-                className="px-6 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <span className="animate-spin">⟳</span> Saving...
-                  </>
-                ) : (
-                  "Save Changes"
-                )}
-              </button>
-            </div>
-          </form>
-        </div>
+          {/* Footer Actions */}
+          <div className="flex justify-end items-center gap-4 pt-6 border-t border-gray-100">
+            <button type="button" onClick={onClose} className="px-8 py-2.5 rounded-xl font-bold text-gray-500 hover:bg-gray-100 transition-all">
+              Cancel
+            </button>
+            <button type="submit" disabled={loading} className="px-10 py-2.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+              {loading ? "Saving Changes..." : "Save Changes"}
+            </button>
+          </div>
+        </form>
       </div>
-    </>
+    </div>
   );
 };
 

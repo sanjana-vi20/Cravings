@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import SideBar from "../../components/userDashboard/SideBar";
 import UserOverview from "../../components/userDashboard/UserOverview";
 import UserProfile from "../../components/userDashboard/UserProfile";
@@ -6,11 +6,21 @@ import UserOrder from "../../components/userDashboard/UserOrder";
 import UserTransaction from "../../components/userDashboard/UserTransaction";
 import UserHelp from "../../components/userDashboard/UserHelp";
 import CartPage from "../CartPage";
+import { useLocation } from "react-router-dom";
 
 
 const UserDashboard = () => {
-  const [active, setActive] = useState("overview");
-  const[isCollapse , setIsCollapse] = useState(true);
+  const location = useLocation();
+const [active, setActive] = useState(location.state?.goTo || "overview");
+const[isCollapse , setIsCollapse] = useState(true);
+
+useEffect(() => {
+    if (location.state?.goTo) {
+      setActive(location.state.goTo);
+    }
+  }, [location.state]);
+
+
   return (
     <>
       <div className="flex w-full min-h-screen bg-slate-50">

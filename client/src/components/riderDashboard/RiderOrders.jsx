@@ -116,6 +116,8 @@ const RiderOrders = () => {
   }
 };
 
+console.log(riderOrders);
+
   const openGoogleMaps = (destLat, destLng) => {
     if (!riderLocation) return toast.error("GPS missing");
     const url = `https://www.google.com/maps/dir/?api=1&origin=${riderLocation.lat},${riderLocation.lng}&destination=${destLat},${destLng}&travelmode=driving`;

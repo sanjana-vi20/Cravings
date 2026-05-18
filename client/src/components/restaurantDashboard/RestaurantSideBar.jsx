@@ -26,7 +26,7 @@ const RestaurantSideBar = ({
     { key: "res-menu", title: "Manage Menu", icon: <MdMenuBook size={20} /> },
     { key: "res-order", title: "Manage Order", icon: <IoCart size={20} /> },
     {
-      key: " res-transaction",
+      key: "res-transaction",
       title: "Manage Transaction",
       icon: <TbTransactionRupee size={20} />,
     },

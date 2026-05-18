@@ -20,7 +20,8 @@ const CartPage = () => {
   const { user, isLogin } = useAuth();
 
   const getCartDetails = async () => {
-    const localCart = JSON.parse(localStorage.getItem(`cart_${user._id}`)) || [];
+    const localCart =
+      JSON.parse(localStorage.getItem(`cart_${user._id}`)) || [];
 
     try {
       if (Object.keys(localCart).length === 0) {
@@ -71,7 +72,8 @@ const CartPage = () => {
   console.log("CurrentUser: ", user);
 
   const handleQuantity = (id, resId, change) => {
-    const updatedCart = JSON.parse(localStorage.getItem(`cart_${user._id}`)) || {};
+    const updatedCart =
+      JSON.parse(localStorage.getItem(`cart_${user._id}`)) || {};
 
     if (updatedCart[resId]) {
       updatedCart[resId].items = updatedCart[resId].items.map((i) =>
@@ -93,7 +95,8 @@ const CartPage = () => {
 
   // 3. Remove Item Logic
   const removeItem = (id, resId) => {
-    const updatedCart = JSON.parse(localStorage.getItem(`cart_${user._id}`)) || {};
+    const updatedCart =
+      JSON.parse(localStorage.getItem(`cart_${user._id}`)) || {};
     const filtered = updatedCart[resId].items.filter((item) => item._id !== id);
     console.log("filtered : ", filtered);
 
@@ -127,44 +130,53 @@ const CartPage = () => {
   // console.log("grouped : ", groupedItems);
 
   // 4. Calculations
- const calculateRestBill = (items) => {
-  // 1. Har item ka total price aur uska specific GST calculate karna
-  const totals = items.reduce(
-    (acc, i) => {
-      const price = Number(i.price);
-      const quantity = i.quantity;
-      const subtotal = price * quantity;
+  const calculateRestBill = (items) => {
+    // 1. Har item ka total price aur uska specific GST calculate karna
+    const totals = items.reduce(
+      (acc, i) => {
+        const price = Number(i.price);
+        const quantity = i.quantity;
+        const subtotal = price * quantity;
 
-      // "10%" jaise string se number nikalna (10)
-      const gstPercentage = parseFloat(i.gst) || 0; 
-      const itemGst = (subtotal * gstPercentage) / 100;
+        // "10%" jaise string se number nikalna (10)
+        const gstPercentage = parseFloat(i.gst) || 0;
+        const itemGst = (subtotal * gstPercentage) / 100;
 
-      acc.itemTotal += subtotal;
-      acc.totalGst += itemGst;
-      
-      return acc;
-    },
-    { itemTotal: 0, totalGst: 0 }
-  );
+        acc.itemTotal += subtotal;
+        acc.totalGst += itemGst;
 
-  // 2. Delivery aur baaki charges
-  const delivery = totals.itemTotal > 500 ? 0 : 40;
-  const platform = 5;
-  
-  // Math.round taaki decimal values clean rahein
-  const finalGst = Math.round(totals.totalGst);
+        return acc;
+      },
+      { itemTotal: 0, totalGst: 0 },
+    );
 
-  return {
-    itemTotal: totals.itemTotal,
-    delivery,
-    gst: finalGst,
-    platform,
-    grandTotal: totals.itemTotal + delivery + finalGst + platform,
+    // 2. Delivery aur baaki charges
+    const delivery = totals.itemTotal > 500 ? 0 : 40;
+    const platform = 5;
+
+    // Math.round taaki decimal values clean rahein
+    const finalGst = Math.round(totals.totalGst);
+
+    return {
+      itemTotal: totals.itemTotal,
+      delivery,
+      gst: finalGst,
+      platform,
+      grandTotal: totals.itemTotal + delivery + finalGst + platform,
+    };
   };
-};
 
   const handleCheckout = (resName, items, bill) => {
-    if (isLogin) {
+    if (user?.address === "N/A") {
+      toast.error("Please First Complete your Profile");
+      if (user?.role === "customer") {
+        navigate("/user-dashboard", { state: { goTo: "profile" } });
+      } else if (user?.role === "manager") {
+        navigate("/restaurant-dashboard", { state: { goTo: "res-profile" } });
+      } else if (user?.role === "rider") {
+        navigate("/rider-dashboard", { state: { goTo: "ride-profile" } });
+      }
+    } else if (isLogin) {
       navigate("/checkoutPage", {
         state: {
           restaurantName: resName,

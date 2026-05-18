@@ -89,8 +89,6 @@ const UserProfile = () => {
               {/* Status & Name */}
               <div className="text-left space-y-1">
                 <h2 className="text-3xl font-bold text-gray-800 tracking-tight">
-                  
-                  
                   {user?.fullName || ""}
                 </h2>
                 <div className="flex items-center gap-2 text-sm font-bold text-[#842A3B]">
@@ -168,10 +166,7 @@ const UserProfile = () => {
                   />
                   <div className="grid grid-cols-2 gap-8">
                     <InfoBlock label="City" value={user?.city || "N/A"} />
-                    <InfoBlock
-                      label="PIN Code"
-                      value={user?.pin || "N/A"}
-                    />
+                    <InfoBlock label="PIN Code" value={user?.pin || "N/A"} />
                   </div>
                 </div>
               </div>

@@ -21,7 +21,9 @@ const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:5173", // Tumhara Frontend URL
+    origin: ["cravingsoffood.netlify.app", 
+    "https://6a0dabafdb2baf461aeeafd3--cravingsoffood.netlify.app",
+    "http://localhost:5173"],// Tumhara Frontend URL
     methods: ["GET", "POST"],
     credentials: true
   },

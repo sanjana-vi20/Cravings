@@ -47,7 +47,7 @@ const UserOrder = () => {
     try {
       setLoading(true);
       const res = await api.patch(
-        `/restaurant/update-order-status/${orderId}`,
+        `${import.meta.env.VITE_UPDATE_ORDER_STATUS}/${orderId}`,
         { status: nextStatus },
       );
 
@@ -86,7 +86,7 @@ const UserOrder = () => {
   const fetchMyOrders = async () => {
     setLoading(true);
     try {
-      const res = await api.get("/user/my-orders");
+      const res = await api.get( import.meta.env.VITE_USER_MY_ORDERS);
       const data = res.data.data;
 
       const ordersArray = Array.isArray(data) ? data : data ? [data] : [];

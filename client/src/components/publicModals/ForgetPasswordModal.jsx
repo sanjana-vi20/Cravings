@@ -27,18 +27,19 @@ const ForgetPasswordModal = ({ onClose }) => {
       let res;
       if (isOtpSent) {
         if (isOtpVerified) {
-          res = await api.post("/auth/forgetPassword", formData);
+          res = await api.post(  import.meta.env.VITE_AUTH_FORGET_PASSWORD,
+ formData);
           toast.success(res.data.message);
           onClose();
         } else {
-          res = await api.post("/auth/verifyOtp", formData);
+          res = await api.post(import.meta.env.VITE_AUTH_VERIFY_OTP, formData);
           toast.success(res.data.message);
           setIsOtpSend(true);
           setIsOtpVerified(true);
         }
       } else {
         console.log("Sending OTP");
-        res = await api.post("/auth/getOtp", formData);
+        res = await api.post(import.meta.env.VITE_AUTH_GET_OTP, formData);
         toast.success(res.data.message);
         setIsOtpSend(true);
       }

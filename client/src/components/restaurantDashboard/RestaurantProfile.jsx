@@ -33,7 +33,7 @@ const RestaurantProfile = () => {
     form_Data.append("image", fileUpload);
 
     try {
-      const res = await api.patch("/restaurant/photo-update", form_Data);
+      const res = await api.patch( import.meta.env.VITE_RESTAURANT_PHOTO_UPDATE, form_Data);
       setPreview(null);
       toast.success(res.data.message);
       setUser(res.data.data);

@@ -65,7 +65,7 @@ const RiderOrders = () => {
     if (!riderLocation) return;
     setLoading(true);
     try {
-      const res = await api.get("/rider/get-orders", {
+      const res = await api.get( import.meta.env.VITE_RIDER_GET_ORDERS, {
         params: { lat: riderLocation.lat, lng: riderLocation.lng },
       });
       setRiderOrders(res.data.data || []);
@@ -100,7 +100,8 @@ const RiderOrders = () => {
   }
 
   try {
-    const res = await api.put(`/rider/update-order-status/${id}`, {
+    const res = await api.put(`${import.meta.env.VITE_RIDER_UPDATE_ORDER_STATUS}/${id}`,
+  {
       status: nextStatus,
     });
 

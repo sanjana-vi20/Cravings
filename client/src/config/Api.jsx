@@ -1,7 +1,8 @@
 import axios from "axios";
+// import { Import } from "lucide-react";
 
 const axiosInstance = axios.create({
-    baseURL : "http://localhost:4500",
+    baseURL : import.meta.env.VITE_BACKEND_URL,
     withCredentials:true,
 })
 

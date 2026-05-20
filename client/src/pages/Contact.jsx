@@ -38,7 +38,8 @@ function Contact() {
     setIsLoading(true);
 
     try {
-      const res = await api.post("/public/new-contact", formData);
+      const res = await api.post(  import.meta.env.VITE_PUBLIC_NEW_CONTACT,
+ formData);
       toast.success(res.data.message || "Message sent successfully!");
       handleClear();
     } catch (error) {

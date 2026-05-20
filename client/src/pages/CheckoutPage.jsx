@@ -68,11 +68,13 @@ const CheckoutPage = () => {
     const total = billDetails.grandTotal;
 
     try {
-      const keyRes = await api.get("/payment/getRazorpayKey");
+      const keyRes = await api.get(  import.meta.env.VITE_PAYMENT_GET_RAZORPAY_KEY
+);
       const key = keyRes.data.key;
       // console.log(key);
 
-      const orderRes = await api.post("/payment/createOrder", {
+      const orderRes = await api.post(  import.meta.env.VITE_PAYMENT_CREATE_ORDER,
+ {
         amount: total,
       });
 
@@ -100,7 +102,7 @@ const CheckoutPage = () => {
             };
             console.log(VerifyPaymentPayload);
             const res = await api.post(
-              "/payment/verifyPayment",
+               import.meta.env.VITE_PAYMENT_VERIFY_PAYMENT,
               VerifyPaymentPayload,
             );
 
@@ -109,7 +111,7 @@ const CheckoutPage = () => {
               response.razorpay_payment_id,
             );
 
-            const OrderRes = await api.post("/user/placeorder", payload);
+            const OrderRes = await api.post( import.meta.env.VITE_USER_PLACE_ORDER, payload);
             console.log("full data",OrderRes);
             
             console.log("Order completed");

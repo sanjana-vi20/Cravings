@@ -80,7 +80,8 @@ function Register() {
       return;
     }
     try {
-      const res = await api.post("/auth/register", formData);
+      const res = await api.post(  import.meta.env.VITE_AUTH_REGISTER,
+ formData);
       toast.success(res.data.message);
       handleClear();
       navigate("/login");

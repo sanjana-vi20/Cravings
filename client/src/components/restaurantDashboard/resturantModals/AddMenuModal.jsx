@@ -55,7 +55,8 @@ const AddMenuModal = ({ onClose }) => {
       Object.keys(formData).forEach(key => form_data.append(key, formData[key]));
       photo.forEach((img) => form_data.append("image", img));
 
-      const res = await api.post("/restaurant/addMenu", form_data);
+      const res = await api.post(  import.meta.env.VITE_RESTAURANT_ADD_MENU,
+ form_data);
       toast.success(res.data.message || "Dish Added Successfully!");
       onClose();
     } catch (error) {

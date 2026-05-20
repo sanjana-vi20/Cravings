@@ -90,7 +90,7 @@ const EditProfileModal = ({ onClose }) => {
     }
     setLoading(true);
     try {
-      const res = await api.put("/user/update", formData);
+      const res = await api.put( import.meta.env.VITE_USER_UPDATE, formData);
       if (res.data?.data) {
         sessionStorage.setItem("CravingUser", JSON.stringify(res.data.data));
         setUser(res.data.data);

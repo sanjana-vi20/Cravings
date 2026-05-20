@@ -42,7 +42,7 @@ const ExploreMenu = () => {
     setLoading(true);
 
     try {
-      const res = await api.get("/public/fetchAllMenu");
+      const res = await api.get(import.meta.env.VITE_PUBLIC_FETCH_ALL_MENU);
       console.log(res.data.data);
       
       setMenu(res.data.data);

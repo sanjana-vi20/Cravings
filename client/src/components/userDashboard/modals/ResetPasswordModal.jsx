@@ -28,7 +28,7 @@ const ResetPasswordModal = ({ onClose }) => {
       return Object.keys(newErrors).length === 0;
     }
     try {
-        const res = await api.patch("/user/resetPassword" , formData);
+        const res = await api.patch( import.meta.env.VITE_USER_RESET_PASSWORD , formData);
     toast.success(res.data.message)
     } catch (error) {
         console.log(error); 

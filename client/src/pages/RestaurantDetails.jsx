@@ -121,14 +121,14 @@ const RestaurantDetails = () => {
           <div className="col-span-3 grid grid-rows-2 gap-2">
             <div className="overflow-hidden group relative">
               <img
-                src={items[0].restaurantImages[1].url}
+                src={items[0]?.restaurantImages[0]?.url}
                 className="w-full h-full object-cover transition-transform absolute duration-700 group-hover:scale-110"
                 alt="Chef"
               />
             </div>
             <div className="overflow-hidden group relative">
               <img
-                src={items[0].restaurantImages[2].url}
+                src={items[0].restaurantImages[0].url}
                 className="w-full h-full object-cover absolute transition-transform duration-700 group-hover:scale-110"
                 alt="Interior"
               />

@@ -152,7 +152,8 @@ const EditResturantProfile = ({ onClose }) => {
     photo.forEach((file) => form_data.append("restaurantImages", file));
 
     try {
-      const res = await api.put("/restaurant/update", form_data);
+      const res = await api.put(  import.meta.env.VITE_RESTAURANT_UPDATE,
+form_data);
       if (res.data?.data) {
         sessionStorage.setItem("CravingUser", JSON.stringify(res.data.data));
         setUser(res.data.data);

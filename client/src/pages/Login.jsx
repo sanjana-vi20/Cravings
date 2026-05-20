@@ -49,7 +49,8 @@ function Login() {
     }
 
     try {
-      const res = await api.post("/auth/login", formData);
+      const res = await api.post(  import.meta.env.VITE_AUTH_LOGIN,
+ formData);
       toast.success(res.data.message);
       setUser(res.data.data);
       setIsLogin(true);

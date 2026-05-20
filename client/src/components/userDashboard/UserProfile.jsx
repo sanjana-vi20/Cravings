@@ -30,7 +30,7 @@ const UserProfile = () => {
     form_Data.append("imageURL", preview);
 
     try {
-      const res = await api.patch("/user/photo-update", form_Data);
+      const res = await api.patch(import.meta.env.VITE_USER_PHOTOUPDATE, form_Data);
       setPreview(null);
       toast.success(res.data.message);
       setUser(res.data.data);

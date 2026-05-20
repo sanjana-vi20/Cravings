@@ -46,7 +46,7 @@ const CartPage = () => {
 
       // console.log("qty : ", qtyMap);
 
-      const res = await api.post(`/public/fetchMenu/`, { arrayId });
+      const res = await api.post( import.meta.env.VITE_PUBLIC_FETCH_MENU, { arrayId });
       const allData = res.data.data;
 
       const finalCart = allData.map((item) => ({

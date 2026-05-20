@@ -367,3 +367,22 @@ export const UpdateUserStatus = async (req, res, next) => {
     next(error);
   }
 };
+
+export const FetchAllOrders = async (req, res, next) => {
+  try {
+    const managerId = req.user._id;
+    console.log("Manager : ", managerId);
+
+    const allOrders = await Order.find({
+      restaurantId: managerId, // Manager ki ID hi yahan restaurantId hai
+    })
+      .populate("userId")
+      .populate("restaurantId");
+
+    console.log(allOrders);
+
+    res.status(200).json({ message: "fetched Successfully", data: allOrders });
+  } catch (error) {
+    next(error);
+  }
+};

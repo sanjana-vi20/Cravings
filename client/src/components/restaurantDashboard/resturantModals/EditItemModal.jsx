@@ -59,7 +59,9 @@ const EditItemModal = ({ onClose  , selectedItem}) => {
 
       console.log(photo);
       
-      const res = await api.put( `/restaurant/updateMenuItem/${selectedItem._id}` , form_data);
+      const res = await api.put( `${import.meta.env.VITE_RESTAURANT_UPDATE_MENU_ITEM}/${selectedItem._id}`,
+  form_data
+);
       toast.success(res.data.message);
       console.log(res.data.data);
       setTimeout(handleClose, 1500);

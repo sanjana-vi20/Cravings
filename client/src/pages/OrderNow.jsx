@@ -12,7 +12,7 @@ const OrderNow = () => {
   const fetchAllRestaurant = async () => {
     setLoading(true);
     try {
-      const res = await api.get("/public/allRestaurants");
+      const res = await api.get( import.meta.env.VITE_PUBLIC_ALL_RESTAURANTS);
       setRestaurants(res.data.data || []);
     } catch (error) {
       console.error(error);

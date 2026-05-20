@@ -25,7 +25,7 @@ const RestaurantOrder = () => {
   const fetchOrders = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await api.get("/restaurant/fetch-orders"); // Wahi API jo pending/preparing deti ho
+      const res = await api.get(import.meta.env.VITE_RESTAURANT_FETCH_ORDERS); // Wahi API jo pending/preparing deti ho
       setOrders(res.data.data || []);
     } catch (error) {
       console.error("Fetch Error:", error);
@@ -51,10 +51,10 @@ const RestaurantOrder = () => {
       setOrders((prev) => [newOrder, ...prev]);
     });
 
-  return () => {
-    socket.off("new_order_received");
-    socket.disconnect();
-  }
+    return () => {
+      socket.off("new_order_received");
+      socket.disconnect();
+    };
   }, [user?._id, fetchOrders]);
 
   // --- 3. Handle Status Update (Moving between columns) ---
@@ -66,7 +66,7 @@ const RestaurantOrder = () => {
 
     try {
       const res = await api.patch(
-        `/restaurant/update-order-status/${orderId}`,
+        `${import.meta.env.VITE_RESTAURANT_UPDATE_ORDER_STATUS}/${orderId}`,
         {
           status: nextStatus,
         },

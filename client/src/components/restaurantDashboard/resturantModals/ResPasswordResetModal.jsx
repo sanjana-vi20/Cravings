@@ -28,7 +28,8 @@ const ResPasswordResetModal = ({ onClose }) => {
       return Object.keys(newErrors).length === 0;
     }
     try {
-        const res = await api.patch("/restaurant/resetPassword" , formData);
+        const res = await api.patch(  import.meta.env.VITE_RESTAURANT_RESET_PASSWORD,
+ formData);
     toast.success(res.data.message)
     } catch (error) {
         console.log(error); 

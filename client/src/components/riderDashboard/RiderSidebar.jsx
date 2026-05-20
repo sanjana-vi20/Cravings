@@ -40,7 +40,7 @@ const RiderSidebar = ({
 
   const handleLogout = async () => {
     try {
-      const res = await api.get("/auth/logout"); // cookie clear
+      const res = await api.get(import.meta.env.VITE_AUTH_LOGOUT); // cookie clear
       toast.success(res.data.message);
       setUser(""); // user clear
       setIsLogin(false); // login clear

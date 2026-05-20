@@ -131,7 +131,7 @@ export const RiderResetPassword = async (req, res, next) => {
 
 export const GetAllOrders = async (req, res, next) => {
   try {
-    //console.log("RiderGetAvailableOrder called with body: ", req.body);
+    //console.log("RiderGetAvailableOrder called with body: ", req.body)
     const { lat, lng } = req.query;
     console.log("Latitude: ", lat, "Longitude: ", lng);
 
@@ -173,11 +173,13 @@ export const GetAllOrders = async (req, res, next) => {
 
 export const UpdateOrderStatus = async (req, res, next) => {
   try {
+    const currentUser = req.user._id;
     const { id } = req.params; // Order ID
     const { status } = req.body; // Rider frontend se status aayega: "onTheWay" ya "delivered"
 
     // 1. Database update karein
     const updatedOrder = await Order.findOneAndUpdate(
+      {riderId: currentUser},
       { _id: id }, 
       { status: status },
       { new: true }

@@ -82,7 +82,7 @@ const EditRiderProfile = ({ onClose }) => {
 
     try {
       // Direct JSON submission since Rider profile usually doesn't have gallery like Restaurant
-      const res = await api.put("/rider/update", formData);
+      const res = await api.put(import.meta.env.VITE_RIDER_UPDATE, formData);
       if (res.data?.data) {
         sessionStorage.setItem("CravingUser", JSON.stringify(res.data.data));
         setUser(res.data.data);

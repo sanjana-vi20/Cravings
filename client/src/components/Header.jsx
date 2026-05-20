@@ -47,7 +47,7 @@ function Header() {
 
   const handleLogout = async () => {
     try {
-      const res = await api.get("/auth/logout");
+      const res = await api.get(import.meta.env.VITE_AUTH_LOGOUT);
       setUser("");
       setIsLogin(false);
       sessionStorage.removeItem("CravingUser");

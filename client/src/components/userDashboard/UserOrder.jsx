@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react"; // Added useMemo
 import {
   ShoppingBag,
   Clock,
@@ -17,6 +17,8 @@ import "aos/dist/aos.css";
 import api from "../../config/Api";
 import { socket } from "../../config/Websocket";
 import { useAuth } from "../../context/AuthContext";
+// Note: Agar aapke paas toast library hai to use yahan import zaroor karein, jaise:
+// import { toast } from "react-hot-toast"; 
 
 const UserOrder = () => {
   const [activeTab, setActiveTab] = useState("active");
@@ -25,7 +27,17 @@ const UserOrder = () => {
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
 
-  // --- 1. Initial Load & Socket Listener ---
+  // --- 1. Tab Filtering using useMemo (Performance & Bug Fix) ---
+  const filteredOrders = useMemo(() => {
+    return orders.filter((order) => {
+      const isCompleted = ["delivered", "rejected", "cancelled"].includes(
+        order.status
+      );
+      return activeTab === "active" ? !isCompleted : isCompleted;
+    });
+  }, [orders, activeTab]);
+
+  // --- 2. Initial Load & Socket Listener ---
   useEffect(() => {
     socket.connect();
 
@@ -37,10 +49,14 @@ const UserOrder = () => {
       console.log("Socket connected! ID:", socket.id);
     });
 
-    // Ye check karne ke liye ki backend se kuch bhi aa raha hai ya nahi
     socket.onAny((eventName, ...args) => {
       console.log(`Event: ${eventName}`, args);
     });
+
+    // Cleanup on unmount
+    return () => {
+      socket.disconnect();
+    };
   }, [user?._id]);
 
   const handleStatusUpdate = async (orderId, nextStatus) => {
@@ -48,14 +64,14 @@ const UserOrder = () => {
       setLoading(true);
       const res = await api.patch(
         `${import.meta.env.VITE_UPDATE_ORDER_STATUS}/${orderId}`,
-        { status: nextStatus },
+        { status: nextStatus }
       );
 
       // Update local state
       setOrders((prev) =>
         prev.map((order) =>
-          order._id === orderId ? { ...order, status: nextStatus } : order,
-        ),
+          order._id === orderId ? { ...order, status: nextStatus } : order
+        )
       );
 
       // Update selected card
@@ -66,37 +82,29 @@ const UserOrder = () => {
         return current;
       });
 
-      toast.success(`Order ${nextStatus}!`);
+      if (typeof toast !== "undefined") toast.success(`Order ${nextStatus}!`);
     } catch (err) {
-      toast.error("Update failed");
+      if (typeof toast !== "undefined") toast.error("Update failed");
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    // AOS.init({ duration: 800 });
-    fetchMyOrders();
-
-    socket.on("order_status_update", handleStatusUpdate);
-
-    return () => socket.off("order_status_update", handleStatusUpdate);
-  }, []); // Empty dependency array is important!
-
   const fetchMyOrders = async () => {
     setLoading(true);
     try {
-      const res = await api.get( import.meta.env.VITE_USER_MY_ORDERS);
+      const res = await api.get(import.meta.env.VITE_USER_MY_ORDERS);
       const data = res.data.data;
 
       const ordersArray = Array.isArray(data) ? data : data ? [data] : [];
       setOrders(ordersArray);
 
+      // Pehli baar me hi default active card set karne ke liye logic
       const initialFiltered = ordersArray.filter((order) => {
         const isCompleted = ["delivered", "rejected", "cancelled"].includes(
-          order.status,
+          order.status
         );
-        return !isCompleted; // Default hum active tab dikhate hain
+        return !isCompleted;
       });
 
       if (initialFiltered.length > 0) {
@@ -112,10 +120,18 @@ const UserOrder = () => {
   };
 
   useEffect(() => {
+    fetchMyOrders();
+
+    socket.on("order_status_update", handleStatusUpdate);
+
+    return () => socket.off("order_status_update", handleStatusUpdate);
+  }, []); 
+
+  // --- Sync Selected Order when tab changes or data updates ---
+  useEffect(() => {
     if (filteredOrders.length > 0) {
-      // Agar current selected order filtered list mein nahi hai, toh pehla wala select karo
       const isStillVisible = filteredOrders.find(
-        (o) => o._id === selectedOrder?._id,
+        (o) => o._id === selectedOrder?._id
       );
       if (!isStillVisible) {
         setSelectedOrder(filteredOrders[0]);
@@ -123,11 +139,9 @@ const UserOrder = () => {
     } else {
       setSelectedOrder(null);
     }
-  }, [activeTab, orders]); // Jab tab badle ya socket se orders update hon
+  }, [filteredOrders]); // Fixed: Now listening to computed filteredOrders directly
 
-  // --- 3. Progress Percentage Logic ---
-  console.log(orders);
-
+  // --- Progress Percentage Logic ---
   const getProgress = (status) => {
     const map = {
       pending: 15,
@@ -137,21 +151,12 @@ const UserOrder = () => {
       pickedUp: 80,
       onTheWay: 90,
       delivered: 100,
-      damaged: 100, // Progress bar full dikhayenge but color change kar sakte hain
+      damaged: 100,
       rejected: 0,
       cancelled: 0,
     };
     return map[status] || 10;
   };
-
-  // --- 4. Tab Filtering ---
-  const filteredOrders = orders.filter((order) => {
-    const isCompleted = ["delivered", "rejected", "cancelled"].includes(
-      order.status,
-    );
-    return activeTab === "active" ? !isCompleted : isCompleted;
-  });
-  console.log(filteredOrders);
 
   if (loading) {
     return (
@@ -165,8 +170,6 @@ const UserOrder = () => {
       </div>
     );
   }
-
-  console.log(selectedOrder);
 
   return (
     <div className="p-4 md:p-10 max-w-7xl mx-auto font-sans antialiased text-slate-900 min-h-screen">
@@ -195,7 +198,7 @@ const UserOrder = () => {
 
           <div className="grid gap-6">
             {filteredOrders.length > 0 ? (
-              filteredOrders.map((order, index) => (
+              filteredOrders.map((order) => (
                 <div
                   key={order._id}
                   onClick={() => setSelectedOrder(order)}
@@ -218,7 +221,7 @@ const UserOrder = () => {
                             "Restaurant"}
                         </h3>
                         <p className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">
-                          ID: #{order.orderNumber?.split("-")[1]}
+                          ID: #{order.orderNumber?.split("-")[1] || order._id?.slice(-5)}
                         </p>
                       </div>
                     </div>
@@ -317,15 +320,15 @@ const UserOrder = () => {
                     {selectedOrder.orderValue?.paymentStatus})
                   </p>
                 </div>
-                <div className="space-y-1 text-right">
+                <div className="text-right " className="space-y-1 text-right">
                   <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest flex items-center gap-1 justify-end">
                     <Clock size={10} /> Ordered On
                   </p>
                   <p className="text-[11px] font-black text-slate-700 uppercase italic tracking-tighter">
-                    {new Date(selectedOrder.createdAt).toLocaleTimeString([], {
+                    {selectedOrder.createdAt ? new Date(selectedOrder.createdAt).toLocaleTimeString([], {
                       hour: "2-digit",
                       minute: "2-digit",
-                    })}
+                    }) : "--:--"}
                   </p>
                 </div>
               </div>
@@ -350,39 +353,30 @@ const UserOrder = () => {
                 </div>
               </div>
 
-              {/* Action Buttons: Conditional Rendering */}
+              {/* Action Buttons */}
               <div className="space-y-3">
-                {/* CANCEL ORDER: Sirf tab dikhega jab order Delivered/PickedUp/OnTheWay NAHI hai */}
                 {["pending", "accepted", "preparing"].includes(
-                  selectedOrder.status,
+                  selectedOrder.status
                 ) && (
                   <button
                     className="w-full py-5 bg-red-50 text-red-600 border border-red-100 rounded-[2rem] font-black text-[10px] tracking-[0.4em] uppercase hover:bg-red-600 hover:text-white transition-all duration-500"
-                    onClick={() => {
-                      handleStatusUpdate(selectedOrder._id, "cancelled");
-                    }}
+                    onClick={() => handleStatusUpdate(selectedOrder._id, "cancelled")}
                   >
                     Cancel Order
                   </button>
                 )}
 
-                {/* REPORT DAMAGE: Sirf tab dikhega jab order DELIVERED ho chuka ho */}
                 {selectedOrder.status === "delivered" && (
                   <button
                     className="w-full py-5 bg-orange-50 text-orange-600 border border-orange-100 rounded-[2rem] font-black text-[10px] tracking-[0.4em] uppercase hover:bg-orange-600 hover:text-white transition-all duration-500 shadow-lg shadow-orange-100"
-                    onClick={() => {
-                      // Aap yahan ek naya function ya modal open kar sakti hain
-                      handleStatusUpdate(selectedOrder._id, "damaged");
-                      toast.error("Damage reported. Support will contact you.");
-                    }}
+                    onClick={() => handleStatusUpdate(selectedOrder._id, "damaged")}
                   >
                     Report Item Damaged ⚠️
                   </button>
                 )}
 
-                {/* Helpful Message for Active Orders that can't be cancelled anymore */}
                 {["ready", "pickedUp", "onTheWay"].includes(
-                  selectedOrder.status,
+                  selectedOrder.status
                 ) && (
                   <p className="text-center text-[9px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 py-4 rounded-2xl">
                     Order is in transit and cannot be cancelled.

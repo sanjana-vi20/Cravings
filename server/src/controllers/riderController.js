@@ -177,13 +177,20 @@ export const UpdateOrderStatus = async (req, res, next) => {
     const { id } = req.params; // Order ID
     const { status } = req.body; // Rider frontend se status aayega: "onTheWay" ya "delivered"
 
-    // 1. Database update karein
+    // ======= ✅ SAHI CODE WAALA SECTION START =======
     const updatedOrder = await Order.findOneAndUpdate(
-      {riderId: currentUser},
-      { _id: id }, 
-      { status: status },
-      { new: true }
-    ).populate("userId"); // Customer details populate kar rahe hain notification ke liye
+      { 
+        _id: id,               // Order ki ID match karo
+        riderId: currentUser   // Aur check karo ki yeh isi rider ka order hai
+      },
+      { 
+        status: status         // Sirf status ko update karo
+      },
+      { 
+        new: true              // Updated document return karega
+      }
+    ).populate("userId");
+    // ======= ✅ SAHI CODE WAALA SECTION END =======
 
     if (!updatedOrder) {
       return res.status(404).json({ message: "Order not found" });
@@ -192,7 +199,7 @@ export const UpdateOrderStatus = async (req, res, next) => {
     // 2. 🔥 SOCKET NOTIFICATION
     const io = req.app.get("socketio");
     if (io) {
-      // (A) CUSTOMER KO BATAO: "Rider is coming" ya "Order Delivered"
+      // (A) CUSTOMER KO BATAO
       io.to(updatedOrder.userId._id.toString()).emit("order_status_update", {
         orderId: updatedOrder._id,
         status: updatedOrder.status,
@@ -201,7 +208,7 @@ export const UpdateOrderStatus = async (req, res, next) => {
           : "Order delivered successfully! ✅",
       });
 
-      // (B) BAAKI RIDERS KO BATAO: Taaki unke dashboard se ye hat jaye ya update ho jaye
+      // (B) BAAKI RIDERS KO BATAO
       io.emit("rider_dashboard_update", {
         orderId: updatedOrder._id,
         status: updatedOrder.status,

@@ -133,11 +133,15 @@ export const GetAllOrders = async (req, res, next) => {
   try {
     //console.log("RiderGetAvailableOrder called with body: ", req.body)
     const { lat, lng } = req.query;
+    const currentRiderId = req.user?._id;
     console.log("Latitude: ", lat, "Longitude: ", lng);
 
-    const availableOrders = await Order.find({
-      riderId: null,
+   const availableOrders = await Order.find({
       status: { $in: ["ready", "pickedUp", "onTheWay"] },
+      $or: [
+        { riderId: null }, // Naye orders jo kisi ne accept nahi kiye
+        { riderId: currentRiderId } // Woh orders jo is current rider ne accept ya pick kiye hain
+      ]
     })
       .populate("userId")
       .populate("restaurantId");

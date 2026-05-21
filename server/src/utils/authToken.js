@@ -14,8 +14,8 @@ export const genToken = async (user, res) => {
     res.cookie("oreo", token, {
       maxAge: 1000 * 60 * 60 * 24,
       httpOnly: true,
-      secure: false,
-      sameSite: "lax",
+      secure: true,
+      sameSite: "none",
     });
   } catch (error) {
     throw error;

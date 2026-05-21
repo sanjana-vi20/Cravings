@@ -1,5 +1,3 @@
-
-
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -13,34 +11,42 @@ import UserRouter from "./src/routers/userRouter.js";
 import PaymentRouter from "./src/routers/paymentRouter.js";
 import ManagerRouter from "./src/routers/managerRouter.js";
 import RiderRouter from "./src/routers/riderRouter.js";
-
 import morgan from 'morgan';
 
 const app = express();
 const httpServer = createServer(app);
 
+// Allowed origins array dono socket aur express ke liye
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://cravingsoffood.netlify.app",
+  "https://6a0dabafdb2baf461aeeafd3--cravingsoffood.netlify.app"
+];
+
 const io = new Server(httpServer, {
   cors: {
-    origin: ["cravingsoffood.netlify.app", 
-    "https://6a0dabafdb2baf461aeeafd3--cravingsoffood.netlify.app",
-    "http://localhost:5173"],// Tumhara Frontend URL
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
     credentials: true
   },
-  allowEIO3: true, // Compatibility ke liye
-  transports: ['websocket', 'polling'] // Dono allow karo
+  allowEIO3: true,
+  transports: ['websocket', 'polling']
 });
 app.set("socketio", io);
 
-app.use(cors({ origin: ["http://localhost:5173"] , credentials:true }));
+// Express CORS fix (Ab Netlify aur Localhost dono chalenge)
+app.use(cors({ 
+  origin: allowedOrigins, 
+  credentials: true 
+}));
+
 app.use(express.json());
-app.use(cookieParser())
+app.use(cookieParser());
 app.use(morgan("dev"));
 
 io.on("connection", (socket) => {
   console.log("New User Connected:", socket.id);
 
-  // Jab manager dashboard khulega, wo apne restaurant ki ID se room join karega
   socket.on("join_restaurant", (restaurantId) => {
     socket.join(restaurantId);
     console.log(`Manager joined room: ${restaurantId}`);
@@ -56,6 +62,12 @@ io.on("connection", (socket) => {
   });
 });
 
+// Root Route Fix (Render ka health-check response dena zaroori hai!)
+app.get("/", (req, res) => {
+  console.log("Server is Running");
+  res.status(200).json({ status: "OK", message: "Server is Running Smoothly!" });
+});
+
 app.use("/auth", AuthRouter);
 app.use("/public" , PublicRouter);
 app.use("/user" , UserRouter);
@@ -63,27 +75,23 @@ app.use("/rider" , RiderRouter);
 app.use("/payment" , PaymentRouter);
 app.use("/restaurant" , ManagerRouter);
 
-app.get("/", (req, res) => {
-  console.log("Server is Running");
-});
-
 app.use((err, req, res, next) => {
   const ErrorMessage = err.message || "Internal Server Error";
   const StatusCode = err.statusCode || 500;
-
   res.status(StatusCode).json({ message: ErrorMessage });
 });
 
-const port = process.env.PORT || 5000;
+// Render ke liye default port 10000 hota hai agar env me na ho
+const port = process.env.PORT || 10000;
 
-httpServer.listen(port, async() => {
+// Host '0.0.0.0' specify karna Render ke liye bohot zaroori hai
+httpServer.listen(port, '0.0.0.0', async () => {
   console.log("Server Started at Port :", port);
-  connectDB();
+  await connectDB();
   try {
     const res = await cloudinary.api.ping();
-    console.log("Cloudinary Api is Working :" , res);
-    
+    console.log("Cloudinary Api is Working :", res);
   } catch (error) {
-    console.error("Error Connecting Cloudinary API :" ,error);
+    console.error("Error Connecting Cloudinary API :", error);
   }
 });

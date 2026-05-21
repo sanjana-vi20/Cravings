@@ -173,25 +173,25 @@ export const GetAllOrders = async (req, res, next) => {
 
 export const UpdateOrderStatus = async (req, res, next) => {
   try {
-    const currentUser = req.user._id;
+    const currentUser = req.user._id; // Logged-in rider ki ID
     const { id } = req.params; // Order ID
-    const { status } = req.body; // Rider frontend se status aayega: "onTheWay" ya "delivered"
+    const { status } = req.body; // Frontend se status aayega (e.g., "onTheWay")
 
-    // ======= ✅ SAHI CODE WAALA SECTION START =======
+    // ======= ✅ UPDATE STATUS AND RIDER ID =======
     const updatedOrder = await Order.findOneAndUpdate(
       { 
-        _id: id,               // Order ki ID match karo
-        riderId: currentUser   // Aur check karo ki yeh isi rider ka order hai
+        _id: id // Sirf Order ID se dhoondo taaki kisi bhi open order ko rider pick kar sake
       },
       { 
-        status: status         // Sirf status ko update karo
+        status: status,         // Status update karo (e.g., "onTheWay")
+        riderId: currentUser    // Rider ki ID database me save karo
       },
       { 
-        new: true              // Updated document return karega
+        new: true // Updated data return karega
       }
-    ).populate("userId");
-    // ======= ✅ SAHI CODE WAALA SECTION END =======
+    ).populate("userId"); // Customer details notification ke liye
 
+    // Agar order nahi mila
     if (!updatedOrder) {
       return res.status(404).json({ message: "Order not found" });
     }
@@ -208,18 +208,18 @@ export const UpdateOrderStatus = async (req, res, next) => {
           : "Order delivered successfully! ✅",
       });
 
-      // (B) BAAKI RIDERS KO BATAO
+      // (B) BAAKI RIDERS KO BATAO: Dashboard update karne ke liye
       io.emit("rider_dashboard_update", {
         orderId: updatedOrder._id,
         status: updatedOrder.status,
         updatedOrder: updatedOrder,
       });
 
-      console.log(`Rider updated Order ${id} to ${status}`);
+      console.log(`Rider ${currentUser} updated Order ${id} to ${status}`);
     }
 
     res.status(200).json({
-      message: `Order status updated to ${status}`,
+      message: `Order status updated to ${status} and assigned to rider.`,
       data: updatedOrder,
     });
   } catch (error) {
